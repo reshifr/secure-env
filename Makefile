@@ -19,7 +19,6 @@ test:
 #
 	@go test -v \
 		./core/crypt
-	@exit 1
 
 .PHONY: build
 build:
