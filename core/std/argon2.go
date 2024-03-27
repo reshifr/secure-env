@@ -1,4 +1,4 @@
-package core
+package std
 
 import (
 	"golang.org/x/crypto/argon2"

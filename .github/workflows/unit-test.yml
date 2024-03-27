@@ -10,6 +10,6 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name: Running unit test
+      - name: Run unit test
         run: |
           make test

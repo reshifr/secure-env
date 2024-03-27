@@ -1,7 +1,7 @@
 package crypt
 
 import (
-	"github.com/reshifr/secure-env/core"
+	"github.com/reshifr/secure-env/core/std"
 )
 
 const (
@@ -10,11 +10,11 @@ const (
 	kdfThreads uint8  = 4
 )
 
-type KDF[H core.IArgon2] struct {
+type KDF[H std.IArgon2] struct {
 	h H
 }
 
-func NewKDF[H core.IArgon2](h H) KDF[H] {
+func NewKDF[H std.IArgon2](h H) KDF[H] {
 	return KDF[H]{h: h}
 }
 

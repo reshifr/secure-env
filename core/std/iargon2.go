@@ -1,4 +1,4 @@
-package core
+package std
 
 type IArgon2 interface {
 	Key(
