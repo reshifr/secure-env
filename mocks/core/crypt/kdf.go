@@ -17,12 +17,12 @@ func (_m *KDF) EXPECT() *KDF_Expecter {
 	return &KDF_Expecter{mock: &_m.Mock}
 }
 
-// PassphraseKey provides a mock function with given fields: passphrase, salt, keyLen
-func (_m *KDF) PassphraseKey(passphrase string, salt []byte, keyLen uint32) []byte {
+// Key provides a mock function with given fields: passphrase, salt, keyLen
+func (_m *KDF) Key(passphrase string, salt []byte, keyLen uint32) []byte {
 	ret := _m.Called(passphrase, salt, keyLen)
 
 	if len(ret) == 0 {
-		panic("no return value specified for PassphraseKey")
+		panic("no return value specified for Key")
 	}
 
 	var r0 []byte
@@ -37,32 +37,32 @@ func (_m *KDF) PassphraseKey(passphrase string, salt []byte, keyLen uint32) []by
 	return r0
 }
 
-// KDF_PassphraseKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PassphraseKey'
-type KDF_PassphraseKey_Call struct {
+// KDF_Key_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Key'
+type KDF_Key_Call struct {
 	*mock.Call
 }
 
-// PassphraseKey is a helper method to define mock.On call
+// Key is a helper method to define mock.On call
 //   - passphrase string
 //   - salt []byte
 //   - keyLen uint32
-func (_e *KDF_Expecter) PassphraseKey(passphrase interface{}, salt interface{}, keyLen interface{}) *KDF_PassphraseKey_Call {
-	return &KDF_PassphraseKey_Call{Call: _e.mock.On("PassphraseKey", passphrase, salt, keyLen)}
+func (_e *KDF_Expecter) Key(passphrase interface{}, salt interface{}, keyLen interface{}) *KDF_Key_Call {
+	return &KDF_Key_Call{Call: _e.mock.On("Key", passphrase, salt, keyLen)}
 }
 
-func (_c *KDF_PassphraseKey_Call) Run(run func(passphrase string, salt []byte, keyLen uint32)) *KDF_PassphraseKey_Call {
+func (_c *KDF_Key_Call) Run(run func(passphrase string, salt []byte, keyLen uint32)) *KDF_Key_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string), args[1].([]byte), args[2].(uint32))
 	})
 	return _c
 }
 
-func (_c *KDF_PassphraseKey_Call) Return(key []byte) *KDF_PassphraseKey_Call {
+func (_c *KDF_Key_Call) Return(key []byte) *KDF_Key_Call {
 	_c.Call.Return(key)
 	return _c
 }
 
-func (_c *KDF_PassphraseKey_Call) RunAndReturn(run func(string, []byte, uint32) []byte) *KDF_PassphraseKey_Call {
+func (_c *KDF_Key_Call) RunAndReturn(run func(string, []byte, uint32) []byte) *KDF_Key_Call {
 	_c.Call.Return(run)
 	return _c
 }

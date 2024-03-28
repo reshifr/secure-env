@@ -5,13 +5,13 @@ import (
 	"sync/atomic"
 )
 
-type IV struct {
+type IV96 struct {
 	id  uint32
 	inc uint64
 }
 
-func LoadIV(rawIV []byte) (*IV, error) {
-	iv := &IV{}
+func LoadIV96(rawIV []byte) (*IV96, error) {
+	iv := &IV96{}
 	if len(rawIV) != 12 {
 		return iv, ErrIVInvalidLen
 	}
@@ -20,18 +20,22 @@ func LoadIV(rawIV []byte) (*IV, error) {
 	return iv, nil
 }
 
-func CreateIV(id uint32) *IV {
-	iv := &IV{id: id, inc: 0}
+func MakeIV96(id uint32) *IV96 {
+	iv := &IV96{id: id, inc: 0}
 	return iv
 }
 
-func (iv *IV) Invoke() {
+func (iv *IV96) Invoke() {
 	atomic.AddUint64(&iv.inc, 1)
 }
 
-func (iv *IV) Raw() []byte {
+func (iv *IV96) Raw() []byte {
 	var rawIV [12]byte
 	binary.BigEndian.PutUint32(rawIV[0:4], iv.id)
 	binary.BigEndian.PutUint64(rawIV[4:12], iv.inc)
 	return rawIV[:]
+}
+
+func (iv *IV96) Len() int {
+	return 12
 }

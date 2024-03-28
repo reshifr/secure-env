@@ -10,7 +10,8 @@ func (err IVError) Error() string {
 	return "ErrIVInvalidLen: invalid size of raw IV."
 }
 
-type IVI interface {
+type IIV interface {
 	Invoke()
 	Raw() (rawIV []byte)
+	Len() (ivLen int)
 }
