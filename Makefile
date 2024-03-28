@@ -4,6 +4,7 @@ BUILD_DIR = build
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
 	./core/crypt
+UNIT_TEST_RUN =
 
 .PHONY: all
 all:
@@ -27,10 +28,11 @@ unit-test:
 		-v \
 		-coverprofile=coverage.out \
 		-outputdir $(UNIT_TEST_BUILD_DIR) \
+		-run '$(UNIT_TEST_RUN)' \
 		$(UNIT_TEST_PKG)
 
 .PHONY: unit-test
-unit-test-coverage: unit-test
+unit-test-coverage:
 # Run all test cases coverage
 #
 	@go tool cover -html=$(UNIT_TEST_BUILD_DIR)/coverage.out
