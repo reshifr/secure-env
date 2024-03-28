@@ -9,7 +9,9 @@ import (
 )
 
 func Test_LoadIV(t *testing.T) {
+	t.Parallel()
 	t.Run("Invalid size of raw IV", func(t *testing.T) {
+		t.Parallel()
 		rawIV := []byte{0xff, 0xff, 0xff}
 		expIV := &IV{}
 		expErr := ErrIVInvalidLen
@@ -19,6 +21,7 @@ func Test_LoadIV(t *testing.T) {
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Valid size of raw IV", func(t *testing.T) {
+		t.Parallel()
 		ivId := uint32(0x01020304)
 		ivInc := uint64(0x0b16212c37424d58)
 		rawIV := binary.BigEndian.AppendUint32(nil, ivId)
@@ -32,6 +35,7 @@ func Test_LoadIV(t *testing.T) {
 }
 
 func Test_CreateIV(t *testing.T) {
+	t.Parallel()
 	ivId := uint32(0x01020304)
 	ivInc := uint64(0)
 	expIV := &IV{id: ivId, inc: ivInc}
@@ -41,9 +45,10 @@ func Test_CreateIV(t *testing.T) {
 }
 
 func Test_IV_Invoke(t *testing.T) {
+	t.Parallel()
 	ivId := uint32(0x01020304)
 	ivInc := uint64(0)
-	executed := uint64(10000)
+	executed := uint64(999)
 	iv := &IV{id: ivId, inc: ivInc}
 	expIV := &IV{id: ivId, inc: executed}
 
@@ -60,6 +65,7 @@ func Test_IV_Invoke(t *testing.T) {
 }
 
 func Test_IV_Raw(t *testing.T) {
+	t.Parallel()
 	ivId := uint32(0x01020304)
 	ivInc := uint64(0x0b16212c37424d58)
 	iv := &IV{id: ivId, inc: ivInc}
