@@ -1,24 +1,39 @@
 package crypt
 
+// Error
 type CipherError int
 
 const (
-	ErrInvalidKeyLen CipherError = iota + 1
-	ErrInvalidIVLen
+	ErrInvalidIVLen CipherError = iota + 1
+	ErrInvalidRawIVLen
+	ErrInvalidKeyLen
 )
 
 func (err CipherError) Error() string {
-	return "ErrInvalidKeyLen: invalid key size."
+	switch err {
+	case ErrInvalidIVLen:
+		return "ErrInvalidIVLen: invalid IV size."
+	case ErrInvalidRawIVLen:
+		return "ErrInvalidRawIVLen: invalid raw IV size."
+	default:
+		return "ErrInvalidKeyLen: invalid key size."
+	}
 }
 
+type ICipherIV interface {
+	Invoke()
+	Raw() (rawIV []byte)
+	Len() (ivLen int)
+}
+
+type ICipherBuf interface {
+	Add()
+	Salt()
+	Ciphertext()
+}
+
+// Interface
 type ICipher interface {
-	KeyLen() uint32
-	Encrypt(iv IIV, passphrase string,
-		plaintext []byte) (cipherBuf *CipherBuf, err error)
-}
-
-type CipherBuf struct {
-	Add        []byte
-	Salt       []byte
-	Ciphertext []byte
+	Seal(iv ICipherIV, passphrase string,
+		plaintext []byte) (cipherBuf *ICipherBuf, err error)
 }
