@@ -1,28 +1,30 @@
 package crypt
 
-type MultiAuthKey[KDF IKDF, CSPRNG ICSPRNG] struct {
-	bitmap      uint64
-	sharedIV    IIV
-	privateIV   IIV
-	sharedKey   []byte
-	privateKeys map[uint8]struct {
+import "golang.org/x/crypto/chacha20poly1305"
+
+type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG] struct {
+	bitmapIDAllocator uint64
+	masterIV          IIV
+	masterKey         []byte
+	privateKeys       map[uint8]struct {
 		add        []byte
 		salt       []byte
 		ciphertext []byte
 	}
 }
 
-// func MakeMultiAuthKey[KDF IKDF, CSPRNG ICSPRNG](kdf KDF,
-// 	csprng CSPRNG, passphrase string) (*MultiAuthKey[KDF, CSPRNG], error) {
-// 	publicKey := [chacha20poly1305.KeySize]byte{}
-// 	if err := csprng.Read(publicKey[:]); err != nil {
-// 		return nil, ErrCSPRNGRead
-// 	}
-// 	authKey := &MultiAuthKey[KDF, CSPRNG]{publicKey: publicKey[:]}
-// 	return authKey, nil
-// }
+func OpenMultiAccessKey[KDF IKDF, CSPRNG ICSPRNG](
+	kdf KDF, csprng CSPRNG) (*MultiAccessKey[KDF, CSPRNG], error) {
+	masterKey := [chacha20poly1305.KeySize]byte{}
+	if err := csprng.Read(masterKey[:]); err != nil {
+		return nil, ErrReadEntropyFailed
+	}
+	key := &MultiAccessKey[KDF, CSPRNG]{masterKey: masterKey[:]}
+	return key, nil
+}
 
-func (key *MultiAuthKey[KDF, CSPRNG]) Add(passphrase string) (int, error) {
+func (key *MultiAccessKey[KDF, CSPRNG]) Add(
+	iv IIV, passphrase string) (int, error) {
 	// ciphertext := key.public
 	// if iv.Len() != chacha20poly1305.NonceSize {
 	// 	return ciphertext, ErrIVInvalidLen

@@ -3,10 +3,10 @@ package crypt
 type CipherError int
 
 const (
-	ErrCipherInvalidKeyLen CipherError = iota + 1
+	ErrInvalidKeyLen CipherError = iota + 1
+	ErrInvalidIVLen
 )
 
 func (err CipherError) Error() string {
-	return "ErrCipherInvalidKeyLen: " +
-		"Failed to read a random value from the entropy sources."
+	return "ErrInvalidKeyLen: invalid key size."
 }

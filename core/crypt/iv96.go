@@ -4,6 +4,10 @@ import (
 	"encoding/binary"
 )
 
+const (
+	iv96Len int = 12
+)
+
 type IV96 struct {
 	id        uint32
 	increment uint64
@@ -15,18 +19,18 @@ func MakeIV96(id uint32) *IV96 {
 }
 
 func LoadIV96(rawIV []byte) (*IV96, error) {
-	if len(rawIV) != 12 {
+	if len(rawIV) != iv96Len {
 		return nil, ErrInvalidRawIVLen
 	}
 	iv := &IV96{
 		id:        binary.BigEndian.Uint32(rawIV[0:4]),
-		increment: binary.BigEndian.Uint64(rawIV[4:12]),
+		increment: binary.BigEndian.Uint64(rawIV[4:iv96Len]),
 	}
 	return iv, nil
 }
 
 func (*IV96) Len() int {
-	return 12
+	return iv96Len
 }
 
 func (iv *IV96) Invoke() {
@@ -34,8 +38,8 @@ func (iv *IV96) Invoke() {
 }
 
 func (iv *IV96) Raw() []byte {
-	rawIV := [12]byte{}
+	rawIV := [iv96Len]byte{}
 	binary.BigEndian.PutUint32(rawIV[0:4], iv.id)
-	binary.BigEndian.PutUint64(rawIV[4:12], iv.increment)
+	binary.BigEndian.PutUint64(rawIV[4:iv96Len], iv.increment)
 	return rawIV[:]
 }
