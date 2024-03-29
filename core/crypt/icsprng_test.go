@@ -8,10 +8,21 @@ import (
 
 func Test_CSPRNGError_Error(t *testing.T) {
 	t.Parallel()
-	err := ErrReadEntropyFailed
-	expMsg := "ErrReadEntropyFailed: " +
-		"Failed to read a random value from the entropy sources."
+	t.Run("ErrReadEntropyFailed", func(t *testing.T) {
+		t.Parallel()
+		err := ErrReadEntropyFailed
+		expMsg := "ErrReadEntropyFailed: " +
+			"Failed to read a random value from the entropy sources."
 
-	msg := err.Error()
-	assert.Equal(t, expMsg, msg)
+		msg := err.Error()
+		assert.Equal(t, expMsg, msg)
+	})
+	t.Run("Unknown error", func(t *testing.T) {
+		t.Parallel()
+		err := CSPRNGError(28928)
+		expMsg := "Error: unknown."
+
+		msg := err.Error()
+		assert.Equal(t, expMsg, msg)
+	})
 }
