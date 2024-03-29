@@ -1,76 +1,73 @@
 package crypt
 
-import "golang.org/x/crypto/chacha20poly1305"
-
-type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG] struct {
-	bitmapIDAllocator uint64
-	masterIV          IIV
-	masterKey         []byte
-	privateKeys       map[uint8]struct {
-		add        []byte
-		salt       []byte
-		ciphertext []byte
-	}
+type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
+	kdf         KDF
+	csprng      CSPRNG
+	cipher      Cipher
+	masterIV    IIV
+	masterKey   []byte
+	bitmap      uint64
+	privateKeys map[int8]*CipherBuf
 }
 
-func OpenMultiAccessKey[KDF IKDF, CSPRNG ICSPRNG](
-	kdf KDF, csprng CSPRNG) (*MultiAccessKey[KDF, CSPRNG], error) {
-	masterKey := [chacha20poly1305.KeySize]byte{}
-	if err := csprng.Read(masterKey[:]); err != nil {
+func OpenMultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher](kdf KDF,
+	csprng CSPRNG, cipher Cipher) (*MultiAccessKey[KDF, CSPRNG, Cipher], error) {
+	masterKey, err := csprng.Make(int(cipher.KeyLen()))
+	if err != nil {
 		return nil, ErrReadEntropyFailed
 	}
-	key := &MultiAccessKey[KDF, CSPRNG]{masterKey: masterKey[:]}
+	key := &MultiAccessKey[KDF, CSPRNG, Cipher]{
+		kdf:       kdf,
+		csprng:    csprng,
+		cipher:    cipher,
+		masterKey: masterKey,
+	}
 	return key, nil
 }
 
-func (key *MultiAccessKey[KDF, CSPRNG]) Add(
-	iv IIV, passphrase string) (int, error) {
-	// ciphertext := key.public
-	// if iv.Len() != chacha20poly1305.NonceSize {
-	// 	return ciphertext, ErrIVInvalidLen
-	// }
-	// salt := [chacha20Poly1305SaltLen]byte{}
-	// if err := cipher.csprng.Read(salt[:]); err != nil {
-	// 	return ciphertext, err
-	// }
-	// add := [chacha20poly1305.Overhead]byte{}
-	// if err := cipher.csprng.Read(add[:]); err != nil {
-	// 	return ciphertext, err
-	// }
-	// k := cipher.kdf.Key(passphrase, salt[:], chacha20poly1305.KeySize)
-	// aead, err := chacha20poly1305.New(k)
-	// if err != nil {
-	// 	return ciphertext, ErrCipherInvalidKeyLen
-	// }
+func (key *MultiAccessKey[KDF, CSPRNG, Cipher]) id() int8 {
+	i := int8(0)
+	n := ^key.bitmap
 
-	// iv.Invoke()
-	// nonce := iv.Raw()
-	// aead.Seal(ciphertext, nonce, plaintext, add[:])
-	return 0, nil
+	if n >= uint64(0x0000000100000000) {
+		i += 32
+		n >>= 32
+	}
+	if n >= uint64(0x0000000000010000) {
+		i += 16
+		n >>= 16
+	}
+	if n >= uint64(0x0000000000000100) {
+		i += 8
+		n >>= 8
+	}
+	if n >= uint64(0x0000000000000010) {
+		i += 4
+		n >>= 4
+	}
+	if n >= uint64(0x0000000000000004) {
+		i += 2
+		n >>= 2
+	}
+	if n >= uint64(0x0000000000000002) {
+		i += 1
+		n >>= 1
+	}
+
+	key.bitmap |= uint64(1) << i
+	return i
 }
 
-// func (cipher *Chacha20Poly1305[KDF, CSPRNG]) Encrypt(
-// 	passphrase string, iv IIV, plaintext []byte) ([]byte, error) {
-// 	ciphertext := []byte{}
-// 	if iv.Len() != chacha20poly1305.NonceSize {
-// 		return ciphertext, ErrIVInvalidLen
-// 	}
-// 	salt := [chacha20Poly1305SaltLen]byte{}
-// 	if err := cipher.csprng.Read(salt[:]); err != nil {
-// 		return ciphertext, err
-// 	}
-// 	add := [chacha20poly1305.Overhead]byte{}
-// 	if err := cipher.csprng.Read(add[:]); err != nil {
-// 		return ciphertext, err
-// 	}
-// 	k := cipher.kdf.Key(passphrase, salt[:], chacha20poly1305.KeySize)
-// 	aead, err := chacha20poly1305.New(k)
-// 	if err != nil {
-// 		return ciphertext, ErrCipherInvalidKeyLen
-// 	}
-
-// 	iv.Invoke()
-// 	nonce := iv.Raw()
-// 	aead.Seal(ciphertext, nonce, plaintext, add[:])
-// 	return ciphertext, nil
-// }
+func (key *MultiAccessKey[KDF, CSPRNG, Cipher]) Add(
+	iv IIV, passphrase string) (int8, error) {
+	if ^key.bitmap == 0 {
+		return -1, ErrKeyExceedsLimit
+	}
+	cipherBuf, err := key.cipher.Encrypt(iv, passphrase, key.masterKey)
+	if err != nil {
+		return -1, nil
+	}
+	id := key.id()
+	key.privateKeys[id] = cipherBuf
+	return id, nil
+}

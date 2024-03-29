@@ -19,8 +19,12 @@ func OpenChaCha20Poly1305[KDF IKDF, CSPRNG ICSPRNG](
 	return &ChaCha20Poly1305[KDF, CSPRNG]{kdf: kdf, csprng: csprng}
 }
 
-func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) Encrypt(
-	iv IIV, passphrase string, plaintext []byte) ([]byte, error) {
+func (*ChaCha20Poly1305[KDF, CSPRNG]) KeyLen() uint32 {
+	return chacha20Poly1305KeyLen
+}
+
+func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) Encrypt(iv IIV,
+	passphrase string, plaintext []byte) (*CipherBuf, error) {
 	if iv.Len() != chacha20poly1305IVLen {
 		return nil, ErrInvalidIVLen
 	}
@@ -37,8 +41,14 @@ func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) Encrypt(
 	if err != nil {
 		return nil, ErrInvalidKeyLen
 	}
+
 	iv.Invoke()
 	ciphertext := []byte{}
 	aead.Seal(ciphertext, iv.Raw(), plaintext, add[:])
-	return ciphertext, nil
+	cipherBuf := &CipherBuf{
+		Add:        add[:],
+		Salt:       salt[:],
+		Ciphertext: ciphertext,
+	}
+	return cipherBuf, nil
 }
