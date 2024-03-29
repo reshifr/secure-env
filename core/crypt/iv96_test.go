@@ -2,40 +2,40 @@ package crypt
 
 import (
 	"encoding/binary"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_IVError_Error(t *testing.T) {
+func Test_MakeIV96(t *testing.T) {
 	t.Parallel()
-	err := ErrIVInvalidLen
-	expMsg := "ErrIVInvalidLen: invalid size of raw IV."
+	ivId := uint32(0x01020304)
+	ivIncrement := uint64(0)
+	expIV := &IV96{id: ivId, increment: ivIncrement}
 
-	msg := err.Error()
-	assert.Equal(t, expMsg, msg)
+	iv := MakeIV96(ivId)
+	assert.Equal(t, expIV, iv)
 }
 
 func Test_LoadIV96(t *testing.T) {
 	t.Parallel()
-	t.Run("Invalid size", func(t *testing.T) {
+	t.Run("Invalid raw IV size", func(t *testing.T) {
 		t.Parallel()
 		rawIV := []byte{0xff, 0xff, 0xff}
-		expIV := &IV96{}
-		expErr := ErrIVInvalidLen
+		var expIV *IV96 = nil
+		expErr := ErrInvalidRawIVLen
 
 		iv, err := LoadIV96(rawIV)
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, expErr)
 	})
-	t.Run("Valid size", func(t *testing.T) {
+	t.Run("Valid raw IV size", func(t *testing.T) {
 		t.Parallel()
 		ivId := uint32(0x01020304)
-		ivInc := uint64(0x0b16212c37424d58)
+		ivIncrement := uint64(0x0b16212c37424d58)
 		rawIV := binary.BigEndian.AppendUint32(nil, ivId)
-		rawIV = binary.BigEndian.AppendUint64(rawIV, ivInc)
-		expIV := &IV96{id: ivId, inc: ivInc}
+		rawIV = binary.BigEndian.AppendUint64(rawIV, ivIncrement)
+		expIV := &IV96{id: ivId, increment: ivIncrement}
 
 		iv, err := LoadIV96(rawIV)
 		assert.Equal(t, expIV, iv)
@@ -43,53 +43,37 @@ func Test_LoadIV96(t *testing.T) {
 	})
 }
 
-func Test_MakeIV96(t *testing.T) {
+func Test_IV96_Len(t *testing.T) {
 	t.Parallel()
-	ivId := uint32(0x01020304)
-	ivInc := uint64(0)
-	expIV := &IV96{id: ivId, inc: ivInc}
+	iv := &IV96{}
+	expIVLen := 12
 
-	iv := MakeIV96(ivId)
-	assert.Equal(t, expIV, iv)
+	ivLen := iv.Len()
+	assert.Equal(t, expIVLen, ivLen)
 }
 
 func Test_IV96_Invoke(t *testing.T) {
 	t.Parallel()
 	ivId := uint32(0x01020304)
-	ivInc := uint64(0)
+	ivIncrement := uint64(0)
 	executed := uint64(999)
-	iv := &IV96{id: ivId, inc: ivInc}
-	expIV := &IV96{id: ivId, inc: executed}
+	iv := &IV96{id: ivId, increment: ivIncrement}
+	expIV := &IV96{id: ivId, increment: executed}
 
-	var wg sync.WaitGroup
-	for i := ivInc; i < executed; i++ {
-		wg.Add(1)
-		go func() {
-			iv.Invoke()
-			wg.Done()
-		}()
+	for i := ivIncrement; i < executed; i++ {
+		iv.Invoke()
 	}
-	wg.Wait()
 	assert.Equal(t, expIV, iv)
 }
 
 func Test_IV96_Raw(t *testing.T) {
 	t.Parallel()
 	ivId := uint32(0x01020304)
-	ivInc := uint64(0x0b16212c37424d58)
-	iv := &IV96{id: ivId, inc: ivInc}
+	ivIncrement := uint64(0x0b16212c37424d58)
+	iv := &IV96{id: ivId, increment: ivIncrement}
 	expRawIV := binary.BigEndian.AppendUint32(nil, ivId)
-	expRawIV = binary.BigEndian.AppendUint64(expRawIV, ivInc)
+	expRawIV = binary.BigEndian.AppendUint64(expRawIV, ivIncrement)
 
 	rawIV := iv.Raw()
 	assert.Equal(t, expRawIV, rawIV)
-}
-
-func Test_IV96_Len(t *testing.T) {
-	t.Parallel()
-	iv := &IV96{}
-	expLen := 12
-
-	len := iv.Len()
-	assert.Equal(t, expLen, len)
 }

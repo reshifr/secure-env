@@ -4,23 +4,21 @@ type AutoRNG struct {
 	csprngFn FnCSPRNG
 }
 
-func NewAutoRNG(csprngFn FnCSPRNG) *AutoRNG {
+func OpenAutoRNG(csprngFn FnCSPRNG) *AutoRNG {
 	return &AutoRNG{csprngFn: csprngFn}
 }
 
 func (csprng *AutoRNG) Read(block []byte) error {
-	_, err := csprng.csprngFn.Read(block)
-	if err != nil {
-		return ErrCSPRNGRead
+	if _, err := csprng.csprngFn.Read(block); err != nil {
+		return ErrReadEntropyFailed
 	}
 	return nil
 }
 
 func (csprng *AutoRNG) Make(blockLen int) ([]byte, error) {
-	b := make([]byte, blockLen)
-	_, err := csprng.csprngFn.Read(b)
-	if err != nil {
-		return b, ErrCSPRNGRead
+	block := make([]byte, blockLen)
+	if _, err := csprng.csprngFn.Read(block); err != nil {
+		return nil, ErrReadEntropyFailed
 	}
-	return b, nil
+	return block, nil
 }

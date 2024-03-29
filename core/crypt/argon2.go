@@ -7,13 +7,13 @@ import (
 const (
 	argon2Time    uint32 = 8
 	argon2Memory  uint32 = 64 * 1024
-	argon2Threads uint8  = 4
+	argon2Threads uint8  = 8
 )
 
 type Argon2 struct{}
 
-func (kdf Argon2) Key(passphrase string, salt []byte, keyLen uint32) []byte {
-	k := argon2.Key(
+func (Argon2) Key(passphrase string, salt []byte, keyLen uint32) []byte {
+	key := argon2.Key(
 		[]byte(passphrase),
 		salt,
 		argon2Time,
@@ -21,5 +21,5 @@ func (kdf Argon2) Key(passphrase string, salt []byte, keyLen uint32) []byte {
 		argon2Threads,
 		keyLen,
 	)
-	return k
+	return key
 }

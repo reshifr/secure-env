@@ -3,11 +3,11 @@ package crypt
 type CSPRNGError int
 
 const (
-	ErrCSPRNGRead CSPRNGError = iota + 1
+	ErrReadEntropyFailed CSPRNGError = iota + 1
 )
 
-func (err CSPRNGError) Error() string {
-	return "ErrCSPRNGRead: " +
+func (CSPRNGError) Error() string {
+	return "ErrReadEntropyFailed: " +
 		"Failed to read a random value from the entropy sources."
 }
 
