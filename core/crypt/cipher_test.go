@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_IVError_Error(t *testing.T) {
+func Test_CipherError_Error(t *testing.T) {
 	t.Parallel()
 	err := ErrInvalidRawIVLen
 	expMsg := "ErrInvalidRawIVLen: invalid raw IV size."

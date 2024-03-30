@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	argon2Time    uint32 = 8
-	argon2Memory  uint32 = 64 * 1024
-	argon2Threads uint8  = 8
+	Argon2Time    uint32 = 7
+	Argon2Memory  uint32 = 65537
+	Argon2Threads uint8  = 7
 )
 
 type Argon2 struct{}
@@ -16,9 +16,9 @@ func (Argon2) Key(passphrase string, salt []byte, keyLen uint32) []byte {
 	key := argon2.Key(
 		[]byte(passphrase),
 		salt,
-		argon2Time,
-		argon2Memory,
-		argon2Threads,
+		Argon2Time,
+		Argon2Memory,
+		Argon2Threads,
 		keyLen,
 	)
 	return key
