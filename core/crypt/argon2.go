@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	Argon2Time    uint32 = 7
-	Argon2Memory  uint32 = 65537
-	Argon2Threads uint8  = 7
+	Argon2Time    = 7
+	Argon2Memory  = 65537
+	Argon2Threads = 7
 )
 
 type Argon2 struct{}

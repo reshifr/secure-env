@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	IV96Len           int = 12
-	IV96FixedLen      int = 4
-	IV96InvocationLen int = 8
+	IV96Len           = 12
+	IV96FixedLen      = 4
+	IV96InvocationLen = 8
 )
 
 type IV96 struct {
@@ -30,17 +30,17 @@ func LoadIV96(rawIV []byte) (*IV96, error) {
 		return nil, ErrInvalidRawIVLen
 	}
 	iv := &IV96{
-		fixed:      binary.BigEndian.Uint32(rawIV[0:IV96FixedLen]),
+		fixed:      binary.BigEndian.Uint32(rawIV[:IV96FixedLen]),
 		invocation: binary.BigEndian.Uint64(rawIV[IV96FixedLen:IV96Len]),
 	}
 	return iv, nil
 }
 
-func (*IV96) Len() int {
+func (*IV96) Len() uint32 {
 	return IV96Len
 }
 
-func (*IV96) FixedLen() int {
+func (*IV96) FixedLen() uint32 {
 	return IV96FixedLen
 }
 
@@ -52,8 +52,8 @@ func (iv *IV96) Invoke() ICipherIV {
 }
 
 func (iv *IV96) Raw() []byte {
-	rawIV := [IV96Len]byte{}
-	binary.BigEndian.PutUint32(rawIV[0:IV96FixedLen], iv.fixed)
+	rawIV := make([]byte, IV96Len)
+	binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], iv.fixed)
 	binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], iv.invocation)
-	return rawIV[:]
+	return rawIV
 }

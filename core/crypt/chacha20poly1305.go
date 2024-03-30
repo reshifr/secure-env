@@ -1,38 +1,30 @@
 package crypt
 
+import "golang.org/x/crypto/chacha20poly1305"
+
 const (
-	ChaCha20Poly1305AddLen  int = 16
-	ChaCha20Poly1305KeyLen  int = 32
-	ChaCha20Poly1305SaltLen int = 32
+	ChaCha20Poly1305AddLen = chacha20poly1305.Overhead
+	ChaCha20Poly1305KeyLen = chacha20poly1305.KeySize
 )
 
-type ChaCha20Poly1305[KDF IKDF, CSPRNG ICSPRNG] struct {
-	kdf    KDF
+type ChaCha20Poly1305[CSPRNG ICSPRNG] struct {
 	csprng CSPRNG
 }
 
-func OpenChaCha20Poly1305[KDF IKDF, CSPRNG ICSPRNG](
-	kdf KDF, csprng CSPRNG) *ChaCha20Poly1305[KDF, CSPRNG] {
-	return &ChaCha20Poly1305[KDF, CSPRNG]{kdf: kdf, csprng: csprng}
+func NewChaCha20Poly1305[CSPRNG ICSPRNG](
+	csprng CSPRNG) *ChaCha20Poly1305[CSPRNG] {
+	return &ChaCha20Poly1305[CSPRNG]{csprng: csprng}
 }
 
-func (*ChaCha20Poly1305[KDF, CSPRNG]) AddLen() int {
-	return ChaCha20Poly1305AddLen
-}
-
-func (*ChaCha20Poly1305[KDF, CSPRNG]) KeyLen() int {
+func (*ChaCha20Poly1305[CSPRNG]) KeyLen() uint32 {
 	return ChaCha20Poly1305KeyLen
 }
 
-func (*ChaCha20Poly1305[KDF, CSPRNG]) SaltLen() int {
-	return ChaCha20Poly1305SaltLen
-}
-
-func (*ChaCha20Poly1305[KDF, CSPRNG]) IV(fixed []byte) (ICipherIV, error) {
+func (*ChaCha20Poly1305[CSPRNG]) IV(fixed []byte) (ICipherIV, error) {
 	return MakeIV96(fixed)
 }
 
-func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) RandomIV() (ICipherIV, error) {
+func (cipher *ChaCha20Poly1305[CSPRNG]) RandomIV() (ICipherIV, error) {
 	rawIV := [IV96Len]byte{}
 	if err := cipher.csprng.Read(rawIV[:]); err != nil {
 		return nil, err
@@ -40,32 +32,40 @@ func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) RandomIV() (ICipherIV, error) {
 	return LoadIV96(rawIV[:])
 }
 
-// func (cipher *ChaCha20Poly1305[KDF, CSPRNG]) Encrypt(iv IIV,
-// 	passphrase string, plaintext []byte) (*CipherBuf, error) {
-// 	if iv.Len() != chacha20poly1305IVLen {
-// 		return nil, ErrInvalidIVLen
-// 	}
-// 	add := [chacha20poly1305AddLen]byte{}
-// 	if err := cipher.csprng.Read(add[:]); err != nil {
-// 		return nil, err
-// 	}
-// 	salt := [chacha20Poly1305SaltLen]byte{}
-// 	if err := cipher.csprng.Read(salt[:]); err != nil {
-// 		return nil, err
-// 	}
-// 	key := cipher.kdf.Key(passphrase, salt[:], chacha20Poly1305KeyLen)
-// 	aead, err := chacha20poly1305.New(key)
-// 	if err != nil {
-// 		return nil, ErrInvalidKeyLen
-// 	}
+func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv ICipherIV,
+	key []byte, plaintext []byte) (ICipherBuf, error) {
+	if iv.Len() != IV96Len {
+		return nil, ErrInvalidIVLen
+	}
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		return nil, ErrInvalidKeyLen
+	}
+	add := [ChaCha20Poly1305AddLen]byte{}
+	if err := cipher.csprng.Read(add[:]); err != nil {
+		return nil, err
+	}
+	nonce := iv.Invoke().Raw()
+	ciphertext := aead.Seal(nil, nonce, plaintext, add[:])
+	buf := MakeChaCha20Poly1305Buf(add, ciphertext)
+	return buf, nil
+}
 
-// 	iv.Invoke()
-// 	ciphertext := []byte{}
-// 	aead.Seal(ciphertext, iv.Raw(), plaintext, add[:])
-// 	cipherBuf := &CipherBuf{
-// 		Add:        add[:],
-// 		Salt:       salt[:],
-// 		Ciphertext: ciphertext,
-// 	}
-// 	return cipherBuf, nil
-// }
+func (cipher *ChaCha20Poly1305[CSPRNG]) Open(iv ICipherIV,
+	key []byte, cipherbuf ICipherBuf) ([]byte, error) {
+	if iv.Len() != IV96Len {
+		return nil, ErrInvalidIVLen
+	}
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		return nil, ErrInvalidKeyLen
+	}
+	nonce := iv.Raw()
+	add := cipherbuf.Add()
+	ciphertext := cipherbuf.Ciphertext()
+	plaintext, err := aead.Open(nil, nonce, ciphertext, add)
+	if err != nil {
+		return nil, ErrInvalidCipherOpenFailed
+	}
+	return plaintext, nil
+}

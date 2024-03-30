@@ -1,18 +1,19 @@
 package crypt
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_OpenAutoRNG(t *testing.T) {
+func Test_NewAutoRNG(t *testing.T) {
 	t.Parallel()
 	fn := FnCSPRNG{}
-	expRNG := &AutoRNG{csprngFn: fn}
+	expRNG := AutoRNG{fnCSPRNG: fn}
 
-	rng := OpenAutoRNG(fn)
+	rng := NewAutoRNG(fn)
 	assert.Equal(t, expRNG, rng)
 }
 
@@ -28,8 +29,8 @@ func Test_AutoRNG_Make(t *testing.T) {
 		var expBlock []byte = nil
 		expErr := ErrReadEntropyFailed
 
-		csprng := &AutoRNG{csprngFn: fn}
-		block, err := csprng.Make(4)
+		rng := AutoRNG{fnCSPRNG: fn}
+		block, err := rng.Make(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -44,10 +45,10 @@ func Test_AutoRNG_Make(t *testing.T) {
 				return n, nil
 			},
 		}
-		expBlock := []byte{0xff, 0xff, 0xff, 0xff}
+		expBlock := bytes.Repeat([]byte{0xff}, 8)
 
-		csprng := &AutoRNG{csprngFn: fn}
-		block, err := csprng.Make(4)
+		rng := AutoRNG{fnCSPRNG: fn}
+		block, err := rng.Make(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})
@@ -62,12 +63,12 @@ func Test_AutoRNG_Read(t *testing.T) {
 				return 0, errors.New("")
 			},
 		}
-		expBlock := [4]byte{}
+		expBlock := [8]byte{}
 		expErr := ErrReadEntropyFailed
 
-		block := [4]byte{}
-		csprng := &AutoRNG{csprngFn: fn}
-		err := csprng.Read(block[:])
+		block := [8]byte{}
+		rng := AutoRNG{fnCSPRNG: fn}
+		err := rng.Read(block[:])
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -82,11 +83,11 @@ func Test_AutoRNG_Read(t *testing.T) {
 				return n, nil
 			},
 		}
-		expBlock := [4]byte{0xff, 0xff, 0xff, 0xff}
+		expBlock := bytes.Repeat([]byte{0xff}, 8)
 
-		block := [4]byte{}
-		csprng := &AutoRNG{csprngFn: fn}
-		err := csprng.Read(block[:])
+		block := make([]byte, 8)
+		rng := AutoRNG{fnCSPRNG: fn}
+		err := rng.Read(block[:])
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})

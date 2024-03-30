@@ -1,6 +1,5 @@
 package crypt
 
-// Error
 type CipherError int
 
 const (
@@ -8,6 +7,8 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
+	ErrInvalidCipherOpenFailed
+	ErrInvalidBufferStructure
 )
 
 func (err CipherError) Error() string {
@@ -24,23 +25,20 @@ func (err CipherError) Error() string {
 }
 
 type ICipherIV interface {
-	Len() (ivLen int)
-	FixedLen() (fixedLen int)
+	Len() (ivLen uint32)
+	FixedLen() (fixedLen uint32)
 	Invoke() (newIV ICipherIV)
 	Raw() (rawIV []byte)
 }
 
 type ICipherBuf interface {
-	Add()
-	Salt()
-	Ciphertext()
+	Add() (add []byte)
+	Ciphertext() (ciphertext []byte)
+	Block() (block []byte)
 }
 
-// // Interface
-// type ICipher interface {
-// 	AddLen() (addLen int)
-// 	KeyLen() (keyLen int)
-// 	SaltLen() (saltLen int)
-// 	Seal(iv ICipherIV, passphrase string,
-// 		plaintext []byte) (cipherBuf *ICipherBuf, err error)
-// }
+type ICipher interface {
+	KeyLen() (keyLen uint32)
+	Seal(iv ICipherIV, key []byte,
+		plaintext []byte) (cipherbuf ICipherBuf, err error)
+}
