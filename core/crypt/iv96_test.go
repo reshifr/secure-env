@@ -64,7 +64,7 @@ func Test_LoadIV96(t *testing.T) {
 func Test_IV96_Len(t *testing.T) {
 	t.Parallel()
 	iv := &IV96{}
-	expIVLen := IV96Len
+	expIVLen := uint32(IV96Len)
 
 	ivLen := iv.Len()
 	assert.Equal(t, expIVLen, ivLen)
@@ -73,7 +73,7 @@ func Test_IV96_Len(t *testing.T) {
 func Test_IV96_FixedLen(t *testing.T) {
 	t.Parallel()
 	iv := &IV96{}
-	expIVLen := IV96FixedLen
+	expIVLen := uint32(IV96FixedLen)
 
 	ivLen := iv.FixedLen()
 	assert.Equal(t, expIVLen, ivLen)
