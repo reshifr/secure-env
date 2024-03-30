@@ -52,8 +52,8 @@ func (iv *IV96) Invoke() ICipherIV {
 }
 
 func (iv *IV96) Raw() []byte {
-	rawIV := [IV96Len]byte{}
+	rawIV := make([]byte, IV96Len)
 	binary.BigEndian.PutUint32(rawIV[0:IV96FixedLen], iv.fixed)
 	binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], iv.invocation)
-	return rawIV[:]
+	return rawIV
 }

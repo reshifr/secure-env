@@ -7,7 +7,10 @@ const (
 	ErrInvalidIVLen CipherError = iota + 1
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
+	ErrInvalidAddLen
 	ErrInvalidKeyLen
+	ErrInvalidSaltLen
+	ErrInvalidBufferStructure
 )
 
 func (err CipherError) Error() string {
