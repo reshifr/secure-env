@@ -4,7 +4,7 @@ type AutoRNG struct {
 	fnCSPRNG FnCSPRNG
 }
 
-func OpenAutoRNG(fnCSPRNG FnCSPRNG) AutoRNG {
+func NewAutoRNG(fnCSPRNG FnCSPRNG) AutoRNG {
 	return AutoRNG{fnCSPRNG: fnCSPRNG}
 }
 

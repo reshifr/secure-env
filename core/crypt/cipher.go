@@ -6,6 +6,7 @@ const (
 	ErrInvalidIVLen CipherError = iota + 1
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
+	ErrInvalidKeyLen
 	ErrInvalidBufferStructure
 )
 
@@ -31,16 +32,12 @@ type ICipherIV interface {
 
 type ICipherBuf interface {
 	Add() (add []byte)
-	Salt() (salt []byte)
 	Ciphertext() (ciphertext []byte)
 	Block() (block []byte)
 }
 
-// // Interface
-// type ICipher interface {
-// 	AddLen() (addLen int)
-// 	KeyLen() (keyLen int)
-// 	SaltLen() (saltLen int)
-// 	Seal(iv ICipherIV, passphrase string,
-// 		plaintext []byte) (cipherBuf *ICipherBuf, err error)
-// }
+type ICipher interface {
+	KeyLen() (keyLen uint32)
+	Seal(iv ICipherIV, key []byte,
+		plaintext []byte) (cipherbuf ICipherBuf, err error)
+}

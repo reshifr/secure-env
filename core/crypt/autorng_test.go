@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_OpenAutoRNG(t *testing.T) {
+func Test_NewAutoRNG(t *testing.T) {
 	t.Parallel()
 	fn := FnCSPRNG{}
 	expRNG := AutoRNG{fnCSPRNG: fn}
 
-	rng := OpenAutoRNG(fn)
+	rng := NewAutoRNG(fn)
 	assert.Equal(t, expRNG, rng)
 }
 
