@@ -1,10 +1,10 @@
 # Secure Env
 
 BUILD_DIR = build
+UNIT_TEST =
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
 	./core/crypt
-UNIT_TEST_RUN =
 
 .PHONY: all
 all:
@@ -28,7 +28,7 @@ unit-test:
 		-v \
 		-coverprofile=coverage.out \
 		-outputdir $(UNIT_TEST_BUILD_DIR) \
-		-run '$(UNIT_TEST_RUN)' \
+		-run '$(UNIT_TEST)' \
 		$(UNIT_TEST_PKG)
 
 .PHONY: unit-test

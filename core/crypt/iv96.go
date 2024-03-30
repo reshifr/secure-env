@@ -2,44 +2,58 @@ package crypt
 
 import (
 	"encoding/binary"
+	"sync/atomic"
 )
 
 const (
-	iv96Len int = 12
+	IV96Len           int = 12
+	IV96FixedLen      int = 4
+	IV96InvocationLen int = 8
 )
 
 type IV96 struct {
-	id        uint32
-	increment uint64
+	fixed      uint32
+	invocation uint64
 }
 
-func MakeIV96(id uint32) *IV96 {
-	iv := &IV96{id: id, increment: 0}
-	return iv
+func MakeIV96(fixed []byte) (*IV96, error) {
+	if len(fixed) != IV96FixedLen {
+		return nil, ErrInvalidIVFixedLen
+	}
+	encFixed := binary.BigEndian.Uint32(fixed)
+	iv := &IV96{fixed: encFixed, invocation: 0}
+	return iv, nil
 }
 
 func LoadIV96(rawIV []byte) (*IV96, error) {
-	if len(rawIV) != iv96Len {
+	if len(rawIV) != IV96Len {
 		return nil, ErrInvalidRawIVLen
 	}
 	iv := &IV96{
-		id:        binary.BigEndian.Uint32(rawIV[0:4]),
-		increment: binary.BigEndian.Uint64(rawIV[4:iv96Len]),
+		fixed:      binary.BigEndian.Uint32(rawIV[0:IV96FixedLen]),
+		invocation: binary.BigEndian.Uint64(rawIV[IV96FixedLen:IV96Len]),
 	}
 	return iv, nil
 }
 
 func (*IV96) Len() int {
-	return iv96Len
+	return IV96Len
 }
 
-func (iv *IV96) Invoke() {
-	iv.increment++
+func (*IV96) FixedLen() int {
+	return IV96FixedLen
+}
+
+func (iv *IV96) Invoke() ICipherIV {
+	return &IV96{
+		fixed:      iv.fixed,
+		invocation: atomic.AddUint64(&iv.invocation, 1),
+	}
 }
 
 func (iv *IV96) Raw() []byte {
-	rawIV := [iv96Len]byte{}
-	binary.BigEndian.PutUint32(rawIV[0:4], iv.id)
-	binary.BigEndian.PutUint64(rawIV[4:iv96Len], iv.increment)
+	rawIV := [IV96Len]byte{}
+	binary.BigEndian.PutUint32(rawIV[0:IV96FixedLen], iv.fixed)
+	binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], iv.invocation)
 	return rawIV[:]
 }

@@ -1,14 +1,14 @@
 package crypt
 
-type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
-	kdf         KDF
-	csprng      CSPRNG
-	cipher      Cipher
-	masterIV    ICipherIV
-	masterKey   []byte
-	bitmap      uint64
-	privateKeys map[int8]*ICipherBuf
-}
+// type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
+// 	kdf         KDF
+// 	csprng      CSPRNG
+// 	cipher      Cipher
+// 	masterIV    ICipherIV
+// 	masterKey   []byte
+// 	bitmap      uint64
+// 	privateKeys map[int8]*ICipherBuf
+// }
 
 // func OpenMultiAccessKey[IV IIV, KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher](
 // 	kdf KDF, csprng CSPRNG, cipher Cipher, iv IIV, passphrase string) (
