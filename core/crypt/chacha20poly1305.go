@@ -50,3 +50,22 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv ICipherIV,
 	buf := MakeChaCha20Poly1305Buf(add, ciphertext)
 	return buf, nil
 }
+
+func (cipher *ChaCha20Poly1305[CSPRNG]) Open(iv ICipherIV,
+	key []byte, cipherbuf ICipherBuf) ([]byte, error) {
+	if iv.Len() != IV96Len {
+		return nil, ErrInvalidIVLen
+	}
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		return nil, ErrInvalidKeyLen
+	}
+	nonce := iv.Raw()
+	add := cipherbuf.Add()
+	ciphertext := cipherbuf.Ciphertext()
+	plaintext, err := aead.Open(nil, nonce, ciphertext, add)
+	if err != nil {
+		return nil, ErrInvalidCipherOpenFailed
+	}
+	return plaintext, nil
+}

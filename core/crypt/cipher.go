@@ -7,6 +7,7 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
+	ErrInvalidCipherOpenFailed
 	ErrInvalidBufferStructure
 )
 

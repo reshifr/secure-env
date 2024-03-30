@@ -4,6 +4,11 @@ const (
 	MultiAccessKeySaltLen = 16
 )
 
+type makEncryptedKey struct {
+	salt      [MultiAccessKeySaltLen]byte
+	cipherbuf ICipherBuf
+}
+
 type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
 	kdf           KDF
 	csprng        CSPRNG
@@ -11,7 +16,7 @@ type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
 	bitmap        uint64
 	iv            ICipherIV
 	sharedKey     []byte
-	encryptedKeys map[int8]ICipherBuf
+	encryptedKeys map[int8]makEncryptedKey
 }
 
 func NewMultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher](
@@ -72,11 +77,11 @@ func (mak *MultiAccessKey[KDF, CSPRNG, Cipher]) Add(
 		return -1, err
 	}
 	privateKey := mak.kdf.Key(passphrase, salt[:], mak.cipher.KeyLen())
-	encryptedKey, err := mak.cipher.Seal(iv, privateKey, mak.sharedKey)
+	cipherbuf, err := mak.cipher.Seal(iv, privateKey, mak.sharedKey)
 	if err != nil {
 		return -1, err
 	}
 	id := mak.id()
-	mak.encryptedKeys[id] = encryptedKey
+	mak.encryptedKeys[id] = makEncryptedKey{salt: salt, cipherbuf: cipherbuf}
 	return id, nil
 }
