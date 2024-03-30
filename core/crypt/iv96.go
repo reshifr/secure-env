@@ -30,7 +30,7 @@ func LoadIV96(rawIV []byte) (*IV96, error) {
 		return nil, ErrInvalidRawIVLen
 	}
 	iv := &IV96{
-		fixed:      binary.BigEndian.Uint32(rawIV[0:IV96FixedLen]),
+		fixed:      binary.BigEndian.Uint32(rawIV[:IV96FixedLen]),
 		invocation: binary.BigEndian.Uint64(rawIV[IV96FixedLen:IV96Len]),
 	}
 	return iv, nil
@@ -53,7 +53,7 @@ func (iv *IV96) Invoke() ICipherIV {
 
 func (iv *IV96) Raw() []byte {
 	rawIV := make([]byte, IV96Len)
-	binary.BigEndian.PutUint32(rawIV[0:IV96FixedLen], iv.fixed)
+	binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], iv.fixed)
 	binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], iv.invocation)
 	return rawIV
 }

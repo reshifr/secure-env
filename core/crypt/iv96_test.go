@@ -51,7 +51,7 @@ func Test_LoadIV96(t *testing.T) {
 		fixed := uint32(0x01020304)
 		invocation := uint64(0x0b16212c37424d58)
 		rawIV := [IV96Len]byte{}
-		binary.BigEndian.PutUint32(rawIV[0:IV96FixedLen], fixed)
+		binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], fixed)
 		binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], invocation)
 		expIV := &IV96{fixed: fixed, invocation: invocation}
 
@@ -127,7 +127,7 @@ func Test_IV96_Raw(t *testing.T) {
 	invocation := uint64(0x0b16212c37424d58)
 	iv := &IV96{fixed: fixed, invocation: invocation}
 	expRawIV := make([]byte, IV96Len)
-	binary.BigEndian.PutUint32(expRawIV[0:IV96FixedLen], fixed)
+	binary.BigEndian.PutUint32(expRawIV[:IV96FixedLen], fixed)
 	binary.BigEndian.PutUint64(expRawIV[IV96FixedLen:IV96Len], invocation)
 
 	rawIV := iv.Raw()
