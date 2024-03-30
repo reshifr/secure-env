@@ -1,60 +1,47 @@
 package crypt
 
 type ChaCha20Poly1305Buf struct {
-	buf []byte
+	block []byte
 }
 
-func MakeChaCha20Poly1305Buf(add []byte, salt []byte,
-	ciphertext []byte) (*ChaCha20Poly1305Buf, error) {
+func MakeChaCha20Poly1305Buf(add []byte,
+	salt []byte, ciphertext []byte) (*ChaCha20Poly1305Buf, error) {
 	if len(add) != ChaCha20Poly1305AddLen {
 		return nil, ErrInvalidAddLen
 	}
 	if len(salt) != ChaCha20Poly1305SaltLen {
 		return nil, ErrInvalidSaltLen
 	}
-	buf := []byte{}
-	buf = append(buf, add...)
-	buf = append(buf, salt...)
-	buf = append(buf, ciphertext...)
-	cpBuf := &ChaCha20Poly1305Buf{buf: buf}
-	return cpBuf, nil
+	block := []byte{}
+	block = append(block, add...)
+	block = append(block, salt...)
+	block = append(block, ciphertext...)
+	buf := &ChaCha20Poly1305Buf{block: block}
+	return buf, nil
 }
 
-func LoadChaCha20Poly1305Buf(buf []byte) (*ChaCha20Poly1305Buf, error) {
-	if len(buf) < ChaCha20Poly1305AddLen+ChaCha20Poly1305SaltLen {
+func LoadChaCha20Poly1305Buf(block []byte) (*ChaCha20Poly1305Buf, error) {
+	if len(block) < ChaCha20Poly1305AddLen+ChaCha20Poly1305SaltLen {
 		return nil, ErrInvalidBufferStructure
 	}
-	cpBuf := &ChaCha20Poly1305Buf{buf: buf}
-	return cpBuf, nil
+	buf := &ChaCha20Poly1305Buf{block: block}
+	return buf, nil
 }
 
-// func (aeadbuf *AEADBuf) Add() []byte {
-// 	const i = AEADBufAddIndexPosition * AEADBufFieldLen
-// 	const j = AEADBufAddLenPosition * AEADBufFieldLen
-// 	const end = j + AEADBufFieldLen
-// 	addIndex := binary.BigEndian.Uint64(aeadbuf.buf[i:j])
-// 	addLen := binary.BigEndian.Uint64(aeadbuf.buf[j:end])
-// 	return aeadbuf.buf[addIndex : addIndex+addLen]
-// }
+func (buf *ChaCha20Poly1305Buf) Add() []byte {
+	return buf.block[0:ChaCha20Poly1305AddLen]
+}
 
-// func (aeadbuf *AEADBuf) Salt() []byte {
-// 	const i = AEADBufSaltIndexPosition * AEADBufFieldLen
-// 	const j = AEADBufSaltLenPosition * AEADBufFieldLen
-// 	const end = j + AEADBufFieldLen
-// 	saltIndex := binary.BigEndian.Uint64(aeadbuf.buf[i:j])
-// 	saltLen := binary.BigEndian.Uint64(aeadbuf.buf[j:end])
-// 	return aeadbuf.buf[saltIndex : saltLen+saltLen]
-// }
+func (buf *ChaCha20Poly1305Buf) Salt() []byte {
+	const i = ChaCha20Poly1305AddLen
+	const j = i + ChaCha20Poly1305SaltLen
+	return buf.block[i:j]
+}
 
-// func (aeadbuf *AEADBuf) Ciphertext() []byte {
-// 	const i = AEADBufCtIndexPosition * AEADBufFieldLen
-// 	const j = AEADBufCtLenPosition * AEADBufFieldLen
-// 	const end = j + AEADBufFieldLen
-// 	ctIndex := binary.BigEndian.Uint64(aeadbuf.buf[i:j])
-// 	ctLen := binary.BigEndian.Uint64(aeadbuf.buf[j:end])
-// 	return aeadbuf.buf[ctIndex : ctIndex+ctLen]
-// }
+func (buf *ChaCha20Poly1305Buf) Ciphertext() []byte {
+	return buf.block[ChaCha20Poly1305AddLen+ChaCha20Poly1305SaltLen:]
+}
 
-// func (aeadbuf *AEADBuf) Raw() []byte {
-// 	return aeadbuf.buf
-// }
+func (buf *ChaCha20Poly1305Buf) Block() []byte {
+	return buf.block
+}

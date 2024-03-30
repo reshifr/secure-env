@@ -1,6 +1,5 @@
 package crypt
 
-// Error
 type CipherError int
 
 const (
@@ -34,9 +33,10 @@ type ICipherIV interface {
 }
 
 type ICipherBuf interface {
-	Add()
-	Salt()
-	Ciphertext()
+	Add() (add []byte)
+	Salt() (salt []byte)
+	Ciphertext() (ciphertext []byte)
+	Block() (block []byte)
 }
 
 // // Interface
