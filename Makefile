@@ -4,7 +4,8 @@ BUILD_DIR = build
 UNIT_TEST =
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
-	./core/crypt
+	./core/crypt \
+	./core/crypt/impl
 
 .PHONY: all
 all:

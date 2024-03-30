@@ -1,9 +1,9 @@
 quiet: false
 with-expecter: true
 disable-version-string: true
-dir: 'mocks/{{trimPrefix .PackagePath "github.com/reshifr/secure-env/"}}'
+dir: '{{trimPrefix .PackagePath "github.com/reshifr/secure-env/"}}/mock'
 mockname: '{{trimPrefix .InterfaceName "I"}}'
 filename: '{{lower (trimPrefix .InterfaceName "I")}}.go'
-outpkg: "{{.PackageName}}_mock"
+outpkg: "mock"
 packages:
   github.com/reshifr/secure-env/core/crypt:

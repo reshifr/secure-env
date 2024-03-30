@@ -3,6 +3,8 @@ package crypt
 import (
 	"encoding/binary"
 	"sync/atomic"
+
+	"github.com/reshifr/secure-env/core/crypt"
 )
 
 const (
@@ -18,7 +20,7 @@ type IV96 struct {
 
 func MakeIV96(fixed []byte) (*IV96, error) {
 	if len(fixed) != IV96FixedLen {
-		return nil, ErrInvalidIVFixedLen
+		return nil, crypt.ErrInvalidIVFixedLen
 	}
 	encFixed := binary.BigEndian.Uint32(fixed)
 	iv := &IV96{fixed: encFixed, invocation: 0}
@@ -27,7 +29,7 @@ func MakeIV96(fixed []byte) (*IV96, error) {
 
 func LoadIV96(rawIV []byte) (*IV96, error) {
 	if len(rawIV) != IV96Len {
-		return nil, ErrInvalidRawIVLen
+		return nil, crypt.ErrInvalidRawIVLen
 	}
 	iv := &IV96{
 		fixed:      binary.BigEndian.Uint32(rawIV[:IV96FixedLen]),
@@ -44,7 +46,7 @@ func (*IV96) FixedLen() uint32 {
 	return IV96FixedLen
 }
 
-func (iv *IV96) Invoke() ICipherIV {
+func (iv *IV96) Invoke() crypt.CipherIV {
 	return &IV96{
 		fixed:      iv.fixed,
 		invocation: atomic.AddUint64(&iv.invocation, 1),

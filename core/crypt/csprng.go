@@ -20,7 +20,7 @@ type FnCSPRNG struct {
 	Read func(b []byte) (n int, err error)
 }
 
-type ICSPRNG interface {
+type CSPRNG interface {
 	Read(block []byte) (err error)
 	Make(blockLen int) (block []byte, err error)
 }
