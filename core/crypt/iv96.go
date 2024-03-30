@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	IV96Len           int = 12
-	IV96FixedLen      int = 4
-	IV96InvocationLen int = 8
+	IV96Len           = 12
+	IV96FixedLen      = 4
+	IV96InvocationLen = 8
 )
 
 type IV96 struct {
@@ -36,11 +36,11 @@ func LoadIV96(rawIV []byte) (*IV96, error) {
 	return iv, nil
 }
 
-func (*IV96) Len() int {
+func (*IV96) Len() uint32 {
 	return IV96Len
 }
 
-func (*IV96) FixedLen() int {
+func (*IV96) FixedLen() uint32 {
 	return IV96FixedLen
 }
 

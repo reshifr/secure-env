@@ -6,9 +6,6 @@ const (
 	ErrInvalidIVLen CipherError = iota + 1
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
-	ErrInvalidAddLen
-	ErrInvalidKeyLen
-	ErrInvalidSaltLen
 	ErrInvalidBufferStructure
 )
 
@@ -26,8 +23,8 @@ func (err CipherError) Error() string {
 }
 
 type ICipherIV interface {
-	Len() (ivLen int)
-	FixedLen() (fixedLen int)
+	Len() (ivLen uint32)
+	FixedLen() (fixedLen uint32)
 	Invoke() (newIV ICipherIV)
 	Raw() (rawIV []byte)
 }
