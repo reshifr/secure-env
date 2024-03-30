@@ -10,7 +10,7 @@ import (
 func Test_OpenAutoRNG(t *testing.T) {
 	t.Parallel()
 	fn := FnCSPRNG{}
-	expRNG := &AutoRNG{csprngFn: fn}
+	expRNG := &AutoRNG{fnCSPRNG: fn}
 
 	rng := OpenAutoRNG(fn)
 	assert.Equal(t, expRNG, rng)
@@ -28,7 +28,7 @@ func Test_AutoRNG_Make(t *testing.T) {
 		var expBlock []byte = nil
 		expErr := ErrReadEntropyFailed
 
-		csprng := &AutoRNG{csprngFn: fn}
+		csprng := &AutoRNG{fnCSPRNG: fn}
 		block, err := csprng.Make(4)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
@@ -46,7 +46,7 @@ func Test_AutoRNG_Make(t *testing.T) {
 		}
 		expBlock := []byte{0xff, 0xff, 0xff, 0xff}
 
-		csprng := &AutoRNG{csprngFn: fn}
+		csprng := &AutoRNG{fnCSPRNG: fn}
 		block, err := csprng.Make(4)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
@@ -66,7 +66,7 @@ func Test_AutoRNG_Read(t *testing.T) {
 		expErr := ErrReadEntropyFailed
 
 		block := [4]byte{}
-		csprng := &AutoRNG{csprngFn: fn}
+		csprng := &AutoRNG{fnCSPRNG: fn}
 		err := csprng.Read(block[:])
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
@@ -85,7 +85,7 @@ func Test_AutoRNG_Read(t *testing.T) {
 		expBlock := [4]byte{0xff, 0xff, 0xff, 0xff}
 
 		block := [4]byte{}
-		csprng := &AutoRNG{csprngFn: fn}
+		csprng := &AutoRNG{fnCSPRNG: fn}
 		err := csprng.Read(block[:])
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
