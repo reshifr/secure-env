@@ -32,7 +32,7 @@ func LoadChaCha20Poly1305Buf(block []byte) (*ChaCha20Poly1305Buf, error) {
 	return buf, nil
 }
 
-func (buf *ChaCha20Poly1305Buf) IV() []byte {
+func (buf *ChaCha20Poly1305Buf) RawIV() []byte {
 	return buf.block[:IV96Len]
 }
 

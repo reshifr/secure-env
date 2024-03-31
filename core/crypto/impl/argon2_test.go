@@ -12,10 +12,9 @@ func Test_Argon2_Key(t *testing.T) {
 	t.Run("Empty input", func(t *testing.T) {
 		t.Parallel()
 		passphrase := ""
-		var salt []byte = nil
 		expKey, _ := hex.DecodeString("5ec0f1251a896d18d4675829f916639f")
 		kdf := Argon2{}
-		key := kdf.Key(passphrase, salt, 16)
+		key := kdf.Key(passphrase, nil, 16)
 		assert.Equal(t, expKey, key)
 	})
 	t.Run("Filled input", func(t *testing.T) {

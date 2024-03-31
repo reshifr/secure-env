@@ -7,8 +7,8 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
-	ErrInvalidCipherOpenFailed
 	ErrInvalidBufferStructure
+	ErrCipherAuthFailed
 )
 
 func (err CipherError) Error() string {
@@ -32,6 +32,7 @@ type CipherIV interface {
 }
 
 type CipherBuf interface {
+	RawIV() (rawIV []byte)
 	Add() (add []byte)
 	Ciphertext() (ciphertext []byte)
 	Block() (block []byte)
@@ -39,6 +40,10 @@ type CipherBuf interface {
 
 type Cipher interface {
 	KeyLen() (keyLen uint32)
+	IV(fixed []byte) (iv CipherIV, err error)
+	RandomIV() (iv CipherIV, err error)
 	Seal(iv CipherIV, key []byte,
 		plaintext []byte) (cipherbuf CipherBuf, err error)
+	Open(iv CipherIV, key []byte,
+		cipherbuf CipherBuf) (plaintext []byte, err error)
 }
