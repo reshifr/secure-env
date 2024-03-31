@@ -1,11 +1,11 @@
-package crypt
+package crypto_impl
 
 import (
 	"encoding/binary"
 	"sync"
 	"testing"
 
-	"github.com/reshifr/secure-env/core/crypt"
+	"github.com/reshifr/secure-env/core/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,8 +15,7 @@ func Test_MakeIV96(t *testing.T) {
 		t.Parallel()
 		fixed := [2]byte{}
 		var expIV *IV96 = nil
-		expErr := crypt.ErrInvalidIVFixedLen
-
+		expErr := crypto.ErrInvalidIVFixedLen
 		iv, err := MakeIV96(fixed[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, expErr)
@@ -28,7 +27,6 @@ func Test_MakeIV96(t *testing.T) {
 		binary.BigEndian.PutUint32(fixed[:], encFixed)
 		invocation := uint64(0)
 		expIV := &IV96{fixed: encFixed, invocation: invocation}
-
 		iv, err := MakeIV96(fixed[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, nil)
@@ -41,8 +39,7 @@ func Test_LoadIV96(t *testing.T) {
 		t.Parallel()
 		rawIV := [4]byte{}
 		var expIV *IV96 = nil
-		expErr := crypt.ErrInvalidRawIVLen
-
+		expErr := crypto.ErrInvalidRawIVLen
 		iv, err := LoadIV96(rawIV[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, expErr)
@@ -55,7 +52,6 @@ func Test_LoadIV96(t *testing.T) {
 		binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], fixed)
 		binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], invocation)
 		expIV := &IV96{fixed: fixed, invocation: invocation}
-
 		iv, err := LoadIV96(rawIV[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, nil)
@@ -66,7 +62,6 @@ func Test_IV96_Len(t *testing.T) {
 	t.Parallel()
 	iv := &IV96{}
 	expIVLen := uint32(IV96Len)
-
 	ivLen := iv.Len()
 	assert.Equal(t, expIVLen, ivLen)
 }
@@ -75,7 +70,6 @@ func Test_IV96_FixedLen(t *testing.T) {
 	t.Parallel()
 	iv := &IV96{}
 	expIVLen := uint32(IV96FixedLen)
-
 	ivLen := iv.FixedLen()
 	assert.Equal(t, expIVLen, ivLen)
 }
@@ -89,7 +83,6 @@ func Test_IV96_Invoke(t *testing.T) {
 		executed := uint64(1000)
 		iv := &IV96{fixed: fixed, invocation: invocation}
 		expIV := &IV96{fixed: fixed, invocation: invocation + executed}
-
 		for i := invocation; i < executed; i++ {
 			iv.Invoke()
 		}
@@ -130,7 +123,6 @@ func Test_IV96_Raw(t *testing.T) {
 	expRawIV := make([]byte, IV96Len)
 	binary.BigEndian.PutUint32(expRawIV[:IV96FixedLen], fixed)
 	binary.BigEndian.PutUint64(expRawIV[IV96FixedLen:IV96Len], invocation)
-
 	rawIV := iv.Raw()
 	assert.Equal(t, expRawIV, rawIV)
 }

@@ -1,28 +1,28 @@
-package crypt
+package crypto_impl
 
 import (
-	"github.com/reshifr/secure-env/core/crypt"
+	"github.com/reshifr/secure-env/core/crypto"
 )
 
 type AutoRNG struct {
-	fnCSPRNG crypt.FnCSPRNG
+	fnCSPRNG crypto.FnCSPRNG
 }
 
-func NewAutoRNG(fnCSPRNG crypt.FnCSPRNG) AutoRNG {
+func NewAutoRNG(fnCSPRNG crypto.FnCSPRNG) AutoRNG {
 	return AutoRNG{fnCSPRNG: fnCSPRNG}
 }
 
 func (rng AutoRNG) Make(blockLen int) ([]byte, error) {
 	block := make([]byte, blockLen)
 	if _, err := rng.fnCSPRNG.Read(block); err != nil {
-		return nil, crypt.ErrReadEntropyFailed
+		return nil, crypto.ErrReadEntropyFailed
 	}
 	return block, nil
 }
 
 func (rng AutoRNG) Read(block []byte) error {
 	if _, err := rng.fnCSPRNG.Read(block); err != nil {
-		return crypt.ErrReadEntropyFailed
+		return crypto.ErrReadEntropyFailed
 	}
 	return nil
 }

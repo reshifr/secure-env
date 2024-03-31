@@ -1,17 +1,20 @@
-package crypt
+package crypto_impl
 
 import (
-	"github.com/reshifr/secure-env/core/crypt"
+	"github.com/reshifr/secure-env/core/crypto"
 )
 
 type ChaCha20Poly1305Buf struct {
 	block []byte
 }
 
-func MakeChaCha20Poly1305Buf(iv crypt.CipherIV, add [ChaCha20Poly1305AddLen]byte,
-	ciphertext []byte) (*ChaCha20Poly1305Buf, error) {
+func MakeChaCha20Poly1305Buf(
+	iv crypto.CipherIV,
+	add [ChaCha20Poly1305AddLen]byte,
+	ciphertext []byte,
+) (*ChaCha20Poly1305Buf, error) {
 	if iv.Len() != IV96Len {
-		return nil, crypt.ErrInvalidIVLen
+		return nil, crypto.ErrInvalidIVLen
 	}
 	rawIV := iv.Raw()
 	block := []byte{}
@@ -23,8 +26,8 @@ func MakeChaCha20Poly1305Buf(iv crypt.CipherIV, add [ChaCha20Poly1305AddLen]byte
 }
 
 func LoadChaCha20Poly1305Buf(block []byte) (*ChaCha20Poly1305Buf, error) {
-	if len(block) < ChaCha20Poly1305AddLen {
-		return nil, crypt.ErrInvalidBufferStructure
+	if len(block) < IV96Len+ChaCha20Poly1305AddLen {
+		return nil, crypto.ErrInvalidBufferStructure
 	}
 	buf := &ChaCha20Poly1305Buf{block: block}
 	return buf, nil
