@@ -83,7 +83,7 @@ func Test_LoadChaCha20Poly1305Buf(t *testing.T) {
 	})
 }
 
-func Test_ChaCha20Poly1305Buf_IV(t *testing.T) {
+func Test_ChaCha20Poly1305Buf_RawIV(t *testing.T) {
 	t.Parallel()
 	block := []byte{
 		0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
@@ -94,7 +94,7 @@ func Test_ChaCha20Poly1305Buf_IV(t *testing.T) {
 	}
 	buf, _ := LoadChaCha20Poly1305Buf(block)
 	expIV := bytes.Repeat([]byte{0xaa}, IV96Len)
-	iv := buf.IV()
+	iv := buf.RawIV()
 	assert.Equal(t, expIV, iv)
 }
 

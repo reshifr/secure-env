@@ -133,8 +133,7 @@ func Test_ChaCha20Poly1305_Seal(t *testing.T) {
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, expErr)
 	})
-
-	t.Run("Seal", func(t *testing.T) {
+	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
 		iv := mock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(IV96Len).Once()
@@ -171,4 +170,50 @@ func Test_ChaCha20Poly1305_Seal(t *testing.T) {
 		assert.Equal(t, buf, expBuf)
 		assert.ErrorIs(t, err, nil)
 	})
+}
+
+func Test_ChaCha20Poly1305_Open(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
+		t.Parallel()
+		buf := mock.NewCipherBuf(t)
+		rawIV := bytes.Repeat([]byte{0xff}, 8)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
+		var expCiphertext []byte = nil
+		expErr := crypto.ErrInvalidRawIVLen
+
+		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		ciphertext, err := cipher.Open(nil, buf)
+		assert.Equal(t, expCiphertext, ciphertext)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
+		t.Parallel()
+		buf := mock.NewCipherBuf(t)
+		rawIV := bytes.Repeat([]byte{0xff}, IV96Len)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
+		key := bytes.Repeat([]byte{0xff}, 8)
+		var expCiphertext []byte = nil
+		expErr := crypto.ErrInvalidKeyLen
+
+		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		ciphertext, err := cipher.Open(key, buf)
+		assert.Equal(t, expCiphertext, ciphertext)
+		assert.ErrorIs(t, err, expErr)
+	})
+
+	// t.Run("", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	iv := mock.NewCipherIV(t)
+	// 	iv.EXPECT().Len().Return(IV96Len).Once()
+	// 	key := bytes.Repeat([]byte{0xff}, 8)
+
+	// 	var expCiphertext []byte = nil
+	// 	expErr := crypto.ErrInvalidKeyLen
+
+	// 	cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+	// 	ciphertext, err := cipher.Open(iv, key, nil)
+	// 	assert.Equal(t, expCiphertext, ciphertext)
+	// 	assert.ErrorIs(t, err, expErr)
+	// })
 }

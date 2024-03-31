@@ -158,6 +158,53 @@ func (_c *CipherBuf_Ciphertext_Call) RunAndReturn(run func() []byte) *CipherBuf_
 	return _c
 }
 
+// RawIV provides a mock function with given fields:
+func (_m *CipherBuf) RawIV() []byte {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for RawIV")
+	}
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func() []byte); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	return r0
+}
+
+// CipherBuf_RawIV_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RawIV'
+type CipherBuf_RawIV_Call struct {
+	*mock.Call
+}
+
+// RawIV is a helper method to define mock.On call
+func (_e *CipherBuf_Expecter) RawIV() *CipherBuf_RawIV_Call {
+	return &CipherBuf_RawIV_Call{Call: _e.mock.On("RawIV")}
+}
+
+func (_c *CipherBuf_RawIV_Call) Run(run func()) *CipherBuf_RawIV_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *CipherBuf_RawIV_Call) Return(rawIV []byte) *CipherBuf_RawIV_Call {
+	_c.Call.Return(rawIV)
+	return _c
+}
+
+func (_c *CipherBuf_RawIV_Call) RunAndReturn(run func() []byte) *CipherBuf_RawIV_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewCipherBuf creates a new instance of CipherBuf. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewCipherBuf(t interface {
