@@ -78,28 +78,28 @@ func Test_IV96_Invoke(t *testing.T) {
 	t.Parallel()
 	t.Run("Serial access", func(t *testing.T) {
 		t.Parallel()
-		fixed := uint32(0x01020304)
-		invocation := uint64(0)
 		executed := uint64(1000)
-		iv := &IV96{fixed: fixed, invocation: invocation}
-		expIV := &IV96{fixed: fixed, invocation: invocation + executed}
-		for i := invocation; i < executed; i++ {
+		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
+		iv, _ := MakeIV96(fixed)
+		expIV, _ := MakeIV96(fixed)
+		expIV.invocation = executed
+		for i := iv.invocation; i < executed; i++ {
 			iv.Invoke()
 		}
 		assert.Equal(t, expIV, iv)
 	})
 	t.Run("Concurrent access", func(t *testing.T) {
 		t.Parallel()
-		fixed := uint32(0x01020304)
-		invocation := uint64(0)
 		executed := uint64(1000)
-		iv := &IV96{fixed: fixed, invocation: invocation}
-		expIV := &IV96{fixed: fixed, invocation: invocation + executed}
+		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
+		iv, _ := MakeIV96(fixed)
+		expIV, _ := MakeIV96(fixed)
+		expIV.invocation = executed
 
 		invocations := map[uint64]struct{}{}
 		var mu sync.Mutex
 		var wg sync.WaitGroup
-		for i := invocation; i < executed; i++ {
+		for i := iv.invocation; i < executed; i++ {
 			wg.Add(1)
 			go func() {
 				newIV := iv.Invoke()
@@ -117,12 +117,9 @@ func Test_IV96_Invoke(t *testing.T) {
 
 func Test_IV96_Raw(t *testing.T) {
 	t.Parallel()
-	fixed := uint32(0x01020304)
-	invocation := uint64(0x0b16212c37424d58)
-	iv := &IV96{fixed: fixed, invocation: invocation}
-	expRawIV := make([]byte, IV96Len)
-	binary.BigEndian.PutUint32(expRawIV[:IV96FixedLen], fixed)
-	binary.BigEndian.PutUint64(expRawIV[IV96FixedLen:IV96Len], invocation)
+	expRawIV := binary.BigEndian.AppendUint32(nil, 0x01020304)
+	expRawIV = binary.BigEndian.AppendUint64(expRawIV, 0x0b16212c37424d58)
+	iv, _ := LoadIV96(expRawIV)
 	rawIV := iv.Raw()
 	assert.Equal(t, expRawIV, rawIV)
 }

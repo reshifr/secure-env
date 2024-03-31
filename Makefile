@@ -4,8 +4,11 @@ BUILD_DIR = build
 UNIT_TEST =
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
-	./core/crypt \
-	./core/crypt/impl
+	./core/crypto \
+	./core/crypto/impl
+
+MOCK_DIR = \
+	./core/crypto/mock
 
 .PHONY: all
 all:
@@ -17,8 +20,8 @@ all:
 mock:
 # Run mockery
 #
-	@rm -rf mocks
-	@mockery --all
+	@rm -rf $(MOCK_DIR)
+	@mockery
 
 .PHONY: unit-test
 unit-test:
