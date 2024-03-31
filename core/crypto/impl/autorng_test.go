@@ -22,7 +22,7 @@ func Test_AutoRNG_Make(t *testing.T) {
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
 		fn := crypto.FnCSPRNG{
-			Read: func(b []byte) (int, error) {
+			Read: func([]byte) (int, error) {
 				return 0, errors.New("")
 			},
 		}
@@ -36,10 +36,10 @@ func Test_AutoRNG_Make(t *testing.T) {
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
 		fn := crypto.FnCSPRNG{
-			Read: func(b []byte) (n int, err error) {
-				n = len(b)
+			Read: func(block []byte) (n int, err error) {
+				n = len(block)
 				for i := 0; i < n; i++ {
-					b[i] = 0xff
+					block[i] = 0xff
 				}
 				return n, nil
 			},
@@ -57,7 +57,7 @@ func Test_AutoRNG_Read(t *testing.T) {
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
 		fn := crypto.FnCSPRNG{
-			Read: func(b []byte) (int, error) {
+			Read: func([]byte) (int, error) {
 				return 0, errors.New("")
 			},
 		}
@@ -73,10 +73,10 @@ func Test_AutoRNG_Read(t *testing.T) {
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
 		fn := crypto.FnCSPRNG{
-			Read: func(b []byte) (int, error) {
-				n := len(b)
+			Read: func(block []byte) (int, error) {
+				n := len(block)
 				for i := 0; i < n; i++ {
-					b[i] = 0xff
+					block[i] = 0xff
 				}
 				return n, nil
 			},
