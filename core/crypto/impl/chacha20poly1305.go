@@ -69,7 +69,7 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Open(
 	ciphertext := cipherbuf.Ciphertext()
 	plaintext, err := aead.Open(nil, rawIV, ciphertext, add)
 	if err != nil {
-		return nil, crypto.ErrInvalidCipherOpenFailed
+		return nil, crypto.ErrCipherAuthFailed
 	}
 	return plaintext, nil
 }

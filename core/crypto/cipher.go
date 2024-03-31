@@ -7,8 +7,8 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
-	ErrInvalidCipherOpenFailed
 	ErrInvalidBufferStructure
+	ErrCipherAuthFailed
 )
 
 func (err CipherError) Error() string {
@@ -45,5 +45,5 @@ type Cipher interface {
 	Seal(iv CipherIV, key []byte,
 		plaintext []byte) (cipherbuf CipherBuf, err error)
 	Open(iv CipherIV, key []byte,
-		cipherbuf CipherBuf) (ciphertext []byte, err error)
+		cipherbuf CipherBuf) (plaintext []byte, err error)
 }
