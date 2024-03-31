@@ -48,12 +48,10 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv crypto.CipherIV,
 	if err := cipher.csprng.Read(add[:]); err != nil {
 		return nil, err
 	}
-	nonce := iv.Invoke().Raw()
+	invokedIV := iv.Invoke()
+	nonce := invokedIV.Raw()
 	ciphertext := aead.Seal(nil, nonce, plaintext, add[:])
-	buf, err := MakeChaCha20Poly1305Buf(iv, add, ciphertext)
-	if err != nil {
-		return nil, err
-	}
+	buf, _ := MakeChaCha20Poly1305Buf(invokedIV, add, ciphertext)
 	return buf, nil
 }
 

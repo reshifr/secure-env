@@ -8,5 +8,6 @@ outpkg: '{{.PackageName}}_mock'
 packages:
   github.com/reshifr/secure-env/core/crypto:
     interfaces:
+      CipherBuf:
       CipherIV:
       CSPRNG:
