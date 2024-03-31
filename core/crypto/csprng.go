@@ -1,4 +1,4 @@
-package crypt
+package crypto
 
 type CSPRNGError int
 
