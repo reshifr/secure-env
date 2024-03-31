@@ -1,6 +1,7 @@
 package crypto_impl
 
 import (
+	"bytes"
 	"encoding/binary"
 	"testing"
 
@@ -80,5 +81,47 @@ func Test_ChaCha20Poly1305_RandomIV(t *testing.T) {
 		iv, err := cipher.RandomIV()
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, nil)
+	})
+}
+
+func Test_ChaCha20Poly1305_Seal(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
+		t.Parallel()
+		iv := mock.NewCipherIV(t)
+		iv.EXPECT().Len().Return(8).Once()
+		var expBuf crypto.CipherBuf = nil
+		expErr := crypto.ErrInvalidIVLen
+		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		buf, err := cipher.Seal(iv, nil, nil)
+		assert.Equal(t, expBuf, buf)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
+		t.Parallel()
+		iv := mock.NewCipherIV(t)
+		iv.EXPECT().Len().Return(IV96Len).Once()
+		key := bytes.Repeat([]byte{0xff}, 8)
+		var expBuf crypto.CipherBuf = nil
+		expErr := crypto.ErrInvalidKeyLen
+		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		buf, err := cipher.Seal(iv, key, nil)
+		assert.Equal(t, expBuf, buf)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
+		t.Parallel()
+		rng := mock.NewCSPRNG(t)
+		iv := mock.NewCipherIV(t)
+		iv.EXPECT().Len().Return(IV96Len).Once()
+		key := bytes.Repeat([]byte{0xff}, ChaCha20Poly1305KeyLen)
+		add := [ChaCha20Poly1305AddLen]byte{}
+		expErr := crypto.ErrReadEntropyFailed
+		rng.EXPECT().Read(add[:]).Return(expErr).Once()
+		var expBuf crypto.CipherBuf = nil
+		cipher := NewChaCha20Poly1305(rng)
+		buf, err := cipher.Seal(iv, key, nil)
+		assert.Equal(t, expBuf, buf)
+		assert.ErrorIs(t, err, expErr)
 	})
 }

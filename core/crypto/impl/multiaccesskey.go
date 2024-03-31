@@ -13,7 +13,10 @@ type makEncryptedKey struct {
 	cipherbuf crypto.CipherBuf
 }
 
-type MultiAccessKey[KDF crypto.KDF, CSPRNG crypto.CSPRNG, Cipher crypto.Cipher] struct {
+type MultiAccessKey[
+	KDF crypto.KDF,
+	CSPRNG crypto.CSPRNG,
+	Cipher crypto.Cipher] struct {
 	kdf           KDF
 	csprng        CSPRNG
 	cipher        Cipher
@@ -23,8 +26,11 @@ type MultiAccessKey[KDF crypto.KDF, CSPRNG crypto.CSPRNG, Cipher crypto.Cipher] 
 	encryptedKeys map[int8]makEncryptedKey
 }
 
-func NewMultiAccessKey[KDF crypto.KDF, CSPRNG crypto.CSPRNG, Cipher crypto.Cipher](
-	kdf KDF, csprng CSPRNG, cipher Cipher, iv crypto.CipherIV) (
+func NewMultiAccessKey[
+	KDF crypto.KDF,
+	CSPRNG crypto.CSPRNG,
+	Cipher crypto.Cipher](kdf KDF,
+	csprng CSPRNG, cipher Cipher, iv crypto.CipherIV) (
 	*MultiAccessKey[KDF, CSPRNG, Cipher], error) {
 	sharedKey, err := csprng.Make(int(cipher.KeyLen()))
 	if err != nil {
