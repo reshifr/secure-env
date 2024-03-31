@@ -24,21 +24,21 @@ func (err CipherError) Error() string {
 	}
 }
 
-type ICipherIV interface {
+type CipherIV interface {
 	Len() (ivLen uint32)
 	FixedLen() (fixedLen uint32)
-	Invoke() (newIV ICipherIV)
+	Invoke() (newIV CipherIV)
 	Raw() (rawIV []byte)
 }
 
-type ICipherBuf interface {
+type CipherBuf interface {
 	Add() (add []byte)
 	Ciphertext() (ciphertext []byte)
 	Block() (block []byte)
 }
 
-type ICipher interface {
+type Cipher interface {
 	KeyLen() (keyLen uint32)
-	Seal(iv ICipherIV, key []byte,
-		plaintext []byte) (cipherbuf ICipherBuf, err error)
+	Seal(iv CipherIV, key []byte,
+		plaintext []byte) (cipherbuf CipherBuf, err error)
 }

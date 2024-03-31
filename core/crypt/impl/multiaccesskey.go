@@ -1,30 +1,34 @@
 package crypt
 
+import (
+	"github.com/reshifr/secure-env/core/crypt"
+)
+
 const (
 	MultiAccessKeySaltLen = 16
 )
 
 type makEncryptedKey struct {
 	salt      [MultiAccessKeySaltLen]byte
-	cipherbuf ICipherBuf
+	cipherbuf crypt.CipherBuf
 }
 
-type MultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher] struct {
+type MultiAccessKey[KDF crypt.KDF, CSPRNG crypt.CSPRNG, Cipher crypt.Cipher] struct {
 	kdf           KDF
 	csprng        CSPRNG
 	cipher        Cipher
 	bitmap        uint64
-	iv            ICipherIV
+	iv            crypt.CipherIV
 	sharedKey     []byte
 	encryptedKeys map[int8]makEncryptedKey
 }
 
-func NewMultiAccessKey[KDF IKDF, CSPRNG ICSPRNG, Cipher ICipher](
-	kdf KDF, csprng CSPRNG, cipher Cipher, iv ICipherIV) (
+func NewMultiAccessKey[KDF crypt.KDF, CSPRNG crypt.CSPRNG, Cipher crypt.Cipher](
+	kdf KDF, csprng CSPRNG, cipher Cipher, iv crypt.CipherIV) (
 	*MultiAccessKey[KDF, CSPRNG, Cipher], error) {
 	sharedKey, err := csprng.Make(int(cipher.KeyLen()))
 	if err != nil {
-		return nil, ErrReadEntropyFailed
+		return nil, crypt.ErrReadEntropyFailed
 	}
 	mak := &MultiAccessKey[KDF, CSPRNG, Cipher]{
 		kdf:       kdf,
@@ -68,9 +72,9 @@ func (mak *MultiAccessKey[KDF, CSPRNG, Cipher]) id() int8 {
 }
 
 func (mak *MultiAccessKey[KDF, CSPRNG, Cipher]) Add(
-	iv ICipherIV, passphrase string) (int8, error) {
+	iv crypt.CipherIV, passphrase string) (int8, error) {
 	if ^mak.bitmap == 0 {
-		return -1, ErrKeyExceedsLimit
+		return -1, crypt.ErrKeyExceedsLimit
 	}
 	salt := [MultiAccessKeySaltLen]byte{}
 	if err := mak.csprng.Read(salt[:]); err != nil {

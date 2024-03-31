@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/reshifr/secure-env/core/crypt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func Test_MakeIV96(t *testing.T) {
 		t.Parallel()
 		fixed := [2]byte{}
 		var expIV *IV96 = nil
-		expErr := ErrInvalidIVFixedLen
+		expErr := crypt.ErrInvalidIVFixedLen
 
 		iv, err := MakeIV96(fixed[:])
 		assert.Equal(t, expIV, iv)
@@ -40,7 +41,7 @@ func Test_LoadIV96(t *testing.T) {
 		t.Parallel()
 		rawIV := [4]byte{}
 		var expIV *IV96 = nil
-		expErr := ErrInvalidRawIVLen
+		expErr := crypt.ErrInvalidRawIVLen
 
 		iv, err := LoadIV96(rawIV[:])
 		assert.Equal(t, expIV, iv)
