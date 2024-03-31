@@ -9,3 +9,4 @@ packages:
   github.com/reshifr/secure-env/core/crypto:
     interfaces:
       CipherIV:
+      CSPRNG:

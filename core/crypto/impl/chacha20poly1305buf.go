@@ -11,8 +11,7 @@ type ChaCha20Poly1305Buf struct {
 func MakeChaCha20Poly1305Buf(
 	iv crypto.CipherIV,
 	add [ChaCha20Poly1305AddLen]byte,
-	ciphertext []byte,
-) (*ChaCha20Poly1305Buf, error) {
+	ciphertext []byte) (*ChaCha20Poly1305Buf, error) {
 	if iv.Len() != IV96Len {
 		return nil, crypto.ErrInvalidIVLen
 	}
