@@ -40,8 +40,6 @@ type CipherBuf interface {
 
 type Cipher interface {
 	KeyLen() (keyLen uint32)
-	IV(fixed []byte) (iv CipherIV, err error)
-	RandomIV() (iv CipherIV, err error)
 	Seal(iv CipherIV, key []byte, plaintext []byte) (buf CipherBuf, err error)
 	Open(key []byte, buf CipherBuf) (plaintext []byte, err error)
 }
