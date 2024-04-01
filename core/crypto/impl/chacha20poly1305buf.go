@@ -26,7 +26,7 @@ func MakeChaCha20Poly1305Buf(
 
 func LoadChaCha20Poly1305Buf(block []byte) (*ChaCha20Poly1305Buf, error) {
 	if len(block) < IV96Len+ChaCha20Poly1305AddLen {
-		return nil, crypto.ErrInvalidBufferStructure
+		return nil, crypto.ErrInvalidBuffer
 	}
 	buf := &ChaCha20Poly1305Buf{block: block}
 	return buf, nil

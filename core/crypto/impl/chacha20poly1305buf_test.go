@@ -53,7 +53,7 @@ func Test_MakeChaCha20Poly1305Buf(t *testing.T) {
 
 func Test_LoadChaCha20Poly1305Buf(t *testing.T) {
 	t.Parallel()
-	t.Run("ErrInvalidBufferStructure error", func(t *testing.T) {
+	t.Run("ErrInvalidBuffer error", func(t *testing.T) {
 		t.Parallel()
 		block := []byte{
 			0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
@@ -62,7 +62,7 @@ func Test_LoadChaCha20Poly1305Buf(t *testing.T) {
 			0xbb, 0xbb, 0xbb,
 		}
 		var expBuf *ChaCha20Poly1305Buf = nil
-		expErr := crypto.ErrInvalidBufferStructure
+		expErr := crypto.ErrInvalidBuffer
 		buf, err := LoadChaCha20Poly1305Buf(block)
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, expErr)

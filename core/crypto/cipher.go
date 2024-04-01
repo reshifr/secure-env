@@ -7,20 +7,26 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
-	ErrInvalidBufferStructure
+	ErrInvalidBuffer
 	ErrCipherAuthFailed
 )
 
 func (err CipherError) Error() string {
 	switch err {
 	case ErrInvalidIVLen:
-		return "ErrInvalidIVLen: invalid IV size."
+		return "ErrInvalidIVLen: invalid IV length."
 	case ErrInvalidIVFixedLen:
-		return "ErrInvalidIVFixedLen: invalid IV fixed size."
+		return "ErrInvalidIVFixedLen: invalid IV 'fixed' length."
 	case ErrInvalidRawIVLen:
-		return "ErrInvalidRawIVLen: invalid raw IV size."
+		return "ErrInvalidRawIVLen: invalid raw IV length."
+	case ErrInvalidKeyLen:
+		return "ErrInvalidKeyLen: invalid key length."
+	case ErrInvalidBuffer:
+		return "ErrInvalidBuffer: the buffer structure cannot be read."
+	case ErrCipherAuthFailed:
+		return "ErrCipherAuthFailed: failed to decrypt the data."
 	default:
-		return "ErrInvalidKeyLen: invalid key size."
+		return "Error: unknown."
 	}
 }
 
