@@ -56,8 +56,8 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv crypto.CipherIV,
 }
 
 func (cipher *ChaCha20Poly1305[CSPRNG]) Open(
-	key []byte, cipherbuf crypto.CipherBuf) ([]byte, error) {
-	rawIV := cipherbuf.RawIV()
+	key []byte, buf crypto.CipherBuf) ([]byte, error) {
+	rawIV := buf.RawIV()
 	if len(rawIV) != IV96Len {
 		return nil, crypto.ErrInvalidRawIVLen
 	}
@@ -65,8 +65,8 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Open(
 	if err != nil {
 		return nil, crypto.ErrInvalidKeyLen
 	}
-	add := cipherbuf.Add()
-	ciphertext := cipherbuf.Ciphertext()
+	add := buf.Add()
+	ciphertext := buf.Ciphertext()
 	plaintext, err := aead.Open(nil, rawIV, ciphertext, add)
 	if err != nil {
 		return nil, crypto.ErrCipherAuthFailed

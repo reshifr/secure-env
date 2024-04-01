@@ -9,8 +9,8 @@ const (
 )
 
 type makEncryptedKey struct {
-	salt      [MultiAccessKeySaltLen]byte
-	cipherbuf crypto.CipherBuf
+	buf  crypto.CipherBuf
+	salt [MultiAccessKeySaltLen]byte
 }
 
 type MultiAccessKey[
@@ -37,11 +37,12 @@ func NewMultiAccessKey[
 		return nil, crypto.ErrReadEntropyFailed
 	}
 	mak := &MultiAccessKey[KDF, CSPRNG, Cipher]{
-		kdf:       kdf,
-		csprng:    csprng,
-		cipher:    cipher,
-		iv:        iv,
-		sharedKey: sharedKey,
+		kdf:           kdf,
+		csprng:        csprng,
+		cipher:        cipher,
+		iv:            iv,
+		sharedKey:     sharedKey,
+		encryptedKeys: make(map[int8]makEncryptedKey),
 	}
 	return mak, nil
 }
@@ -49,27 +50,27 @@ func NewMultiAccessKey[
 func (mak *MultiAccessKey[KDF, CSPRNG, Cipher]) id() int8 {
 	i := int8(0)
 	n := ^mak.bitmap
-	if n >= uint64(0x0000000100000000) {
+	if n >= 0x0000000100000000 {
 		i += 32
 		n >>= 32
 	}
-	if n >= uint64(0x0000000000010000) {
+	if n >= 0x0000000000010000 {
 		i += 16
 		n >>= 16
 	}
-	if n >= uint64(0x0000000000000100) {
+	if n >= 0x0000000000000100 {
 		i += 8
 		n >>= 8
 	}
-	if n >= uint64(0x0000000000000010) {
+	if n >= 0x0000000000000010 {
 		i += 4
 		n >>= 4
 	}
-	if n >= uint64(0x0000000000000004) {
+	if n >= 0x0000000000000004 {
 		i += 2
 		n >>= 2
 	}
-	if n >= uint64(0x0000000000000002) {
+	if n >= 0x0000000000000002 {
 		i += 1
 		n >>= 1
 	}
@@ -87,11 +88,11 @@ func (mak *MultiAccessKey[KDF, CSPRNG, Cipher]) Add(
 		return -1, err
 	}
 	privateKey := mak.kdf.Key(passphrase, salt[:], mak.cipher.KeyLen())
-	cipherbuf, err := mak.cipher.Seal(iv, privateKey, mak.sharedKey)
+	buf, err := mak.cipher.Seal(iv, privateKey, mak.sharedKey)
 	if err != nil {
 		return -1, err
 	}
 	id := mak.id()
-	mak.encryptedKeys[id] = makEncryptedKey{salt: salt, cipherbuf: cipherbuf}
+	mak.encryptedKeys[id] = makEncryptedKey{buf: buf, salt: salt}
 	return id, nil
 }
