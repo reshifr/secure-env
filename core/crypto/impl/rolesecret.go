@@ -83,7 +83,7 @@ func (sec *RoleSecret[KDF, CSPRNG, Cipher]) userId() int8 {
 func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Add(
 	userIV crypto.CipherIV, passphrase string) (int8, error) {
 	if ^sec.bitmap == 0 {
-		return -1, crypto.ErrSecretSharingExceedsLimit
+		return -1, crypto.ErrSharingExceedsLimit
 	}
 	salt := [RoleSecretSaltLen]byte{}
 	if err := sec.csprng.Read(salt[:]); err != nil {
