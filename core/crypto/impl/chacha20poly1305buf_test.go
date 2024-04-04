@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/reshifr/secure-env/core/crypto"
-	mock "github.com/reshifr/secure-env/core/crypto/mock"
+	cmock "github.com/reshifr/secure-env/core/crypto/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +13,7 @@ func Test_MakeChaCha20Poly1305Buf(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(8).Once()
 		add := [...]byte{
 			0xbb, 0xbb, 0xbb, 0xbb, 0xbb, 0xbb, 0xbb, 0xbb,
@@ -28,7 +28,7 @@ func Test_MakeChaCha20Poly1305Buf(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		rawIV := bytes.Repeat([]byte{0xaa}, IV96Len)
 		iv.EXPECT().Len().Return(IV96Len).Once()
 		iv.EXPECT().Raw().Return(rawIV).Once()
