@@ -9,6 +9,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_MakeIV96(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrInvalidIVFixedLen error", func(t *testing.T) {
+		t.Parallel()
+		fixed := [2]byte{}
+		var expIV *IV96 = nil
+		expErr := crypto.ErrInvalidIVFixedLen
+		iv, err := MakeIV96(fixed[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		fixed := [IV96FixedLen]byte{}
+		encFixed := uint32(0x01020304)
+		binary.BigEndian.PutUint32(fixed[:], encFixed)
+		invocation := uint64(0)
+		expIV := &IV96{fixed: encFixed, invocation: invocation}
+		iv, err := MakeIV96(fixed[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, nil)
+	})
+}
+
 func Test_LoadIV96(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
@@ -19,6 +43,19 @@ func Test_LoadIV96(t *testing.T) {
 		iv, err := LoadIV96(rawIV[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		fixed := uint32(0x01020304)
+		invocation := uint64(0x0b16212c37424d58)
+		rawIV := [IV96Len]byte{}
+		binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], fixed)
+		binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], invocation)
+		expIV := &IV96{fixed: fixed, invocation: invocation}
+
+		iv, err := LoadIV96(rawIV[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, nil)
 	})
 }
 

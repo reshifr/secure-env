@@ -23,18 +23,6 @@ func (*ChaCha20Poly1305[CSPRNG]) KeyLen() uint32 {
 	return ChaCha20Poly1305KeyLen
 }
 
-func (*ChaCha20Poly1305[CSPRNG]) IV(fixed []byte) (crypto.CipherIV, error) {
-	return MakeIV96(fixed)
-}
-
-func (cipher *ChaCha20Poly1305[CSPRNG]) RandomIV() (crypto.CipherIV, error) {
-	rawIV := [IV96Len]byte{}
-	if err := cipher.csprng.Read(rawIV[:]); err != nil {
-		return nil, err
-	}
-	return LoadIV96(rawIV[:])
-}
-
 func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv crypto.CipherIV,
 	key []byte, plaintext []byte) (crypto.CipherBuf, error) {
 	if iv.Len() != IV96Len {
