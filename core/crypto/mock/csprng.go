@@ -17,12 +17,12 @@ func (_m *CSPRNG) EXPECT() *CSPRNG_Expecter {
 	return &CSPRNG_Expecter{mock: &_m.Mock}
 }
 
-// Make provides a mock function with given fields: blockLen
-func (_m *CSPRNG) Make(blockLen int) ([]byte, error) {
+// Block provides a mock function with given fields: blockLen
+func (_m *CSPRNG) Block(blockLen int) ([]byte, error) {
 	ret := _m.Called(blockLen)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Make")
+		panic("no return value specified for Block")
 	}
 
 	var r0 []byte
@@ -47,30 +47,30 @@ func (_m *CSPRNG) Make(blockLen int) ([]byte, error) {
 	return r0, r1
 }
 
-// CSPRNG_Make_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Make'
-type CSPRNG_Make_Call struct {
+// CSPRNG_Block_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Block'
+type CSPRNG_Block_Call struct {
 	*mock.Call
 }
 
-// Make is a helper method to define mock.On call
+// Block is a helper method to define mock.On call
 //   - blockLen int
-func (_e *CSPRNG_Expecter) Make(blockLen interface{}) *CSPRNG_Make_Call {
-	return &CSPRNG_Make_Call{Call: _e.mock.On("Make", blockLen)}
+func (_e *CSPRNG_Expecter) Block(blockLen interface{}) *CSPRNG_Block_Call {
+	return &CSPRNG_Block_Call{Call: _e.mock.On("Block", blockLen)}
 }
 
-func (_c *CSPRNG_Make_Call) Run(run func(blockLen int)) *CSPRNG_Make_Call {
+func (_c *CSPRNG_Block_Call) Run(run func(blockLen int)) *CSPRNG_Block_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(int))
 	})
 	return _c
 }
 
-func (_c *CSPRNG_Make_Call) Return(block []byte, err error) *CSPRNG_Make_Call {
+func (_c *CSPRNG_Block_Call) Return(block []byte, err error) *CSPRNG_Block_Call {
 	_c.Call.Return(block, err)
 	return _c
 }
 
-func (_c *CSPRNG_Make_Call) RunAndReturn(run func(int) ([]byte, error)) *CSPRNG_Make_Call {
+func (_c *CSPRNG_Block_Call) RunAndReturn(run func(int) ([]byte, error)) *CSPRNG_Block_Call {
 	_c.Call.Return(run)
 	return _c
 }

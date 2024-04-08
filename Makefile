@@ -1,11 +1,14 @@
 # Secure Env
 
 BUILD_DIR = build
-UNIT_TEST =
+TEST =
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
 	./core/crypto \
 	./core/crypto/impl
+
+INTEGRATION_TEST_PKG = \
+	./core/crypto/test \
 
 MOCK_DIR = \
 	./core/crypto/mock
@@ -32,7 +35,7 @@ unit-test:
 		-v \
 		-coverprofile=coverage.out \
 		-outputdir $(UNIT_TEST_BUILD_DIR) \
-		-run '$(UNIT_TEST)' \
+		-run '$(TEST)' \
 		$(UNIT_TEST_PKG)
 
 .PHONY: unit-test
@@ -40,6 +43,15 @@ unit-test-coverage:
 # Run all test cases coverage
 #
 	@go tool cover -html=$(UNIT_TEST_BUILD_DIR)/coverage.out
+
+.PHONY: integration-test
+integration-test:
+# Run all test cases
+#
+	@go test \
+		-v \
+		-run '$(TEST)' \
+		$(INTEGRATION_TEST_PKG)
 
 .PHONY: build
 build:

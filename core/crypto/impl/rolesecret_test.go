@@ -22,7 +22,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		var key []byte = nil
 		expErr := crypto.ErrReadEntropyFailed
-		rng.EXPECT().Make(int(keyLen)).Return(key, expErr).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, expErr).Once()
 		var expSec *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
 		sec, err := MakeRoleSecret(kdf, rng, cipher, roleIV)
@@ -39,7 +39,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 		expSec := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
 			kdf:      kdf,
 			csprng:   rng,
@@ -67,7 +67,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		keyLen := uint32(8)
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)
@@ -104,7 +104,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		expErr := crypto.ErrReadEntropyFailed
@@ -128,7 +128,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Once()
@@ -158,7 +158,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		keyLen := uint32(8)
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)
