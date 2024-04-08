@@ -21,6 +21,6 @@ type FnCSPRNG struct {
 }
 
 type CSPRNG interface {
+	Block(blockLen int) (block []byte, err error)
 	Read(block []byte) (err error)
-	Make(blockLen int) (block []byte, err error)
 }

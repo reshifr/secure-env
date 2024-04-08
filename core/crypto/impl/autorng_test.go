@@ -17,7 +17,7 @@ func Test_NewAutoRNG(t *testing.T) {
 	assert.Equal(t, expRNG, rng)
 }
 
-func Test_AutoRNG_Make(t *testing.T) {
+func Test_AutoRNG_Block(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
@@ -29,7 +29,7 @@ func Test_AutoRNG_Make(t *testing.T) {
 		var expBlock []byte = nil
 		expErr := crypto.ErrReadEntropyFailed
 		rng := NewAutoRNG(fn)
-		block, err := rng.Make(8)
+		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -46,7 +46,7 @@ func Test_AutoRNG_Make(t *testing.T) {
 		}
 		expBlock := bytes.Repeat([]byte{0xff}, 8)
 		rng := NewAutoRNG(fn)
-		block, err := rng.Make(8)
+		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})

@@ -7,21 +7,21 @@ import (
 	"testing"
 
 	"github.com/reshifr/secure-env/core/crypto"
-	mock "github.com/reshifr/secure-env/core/crypto/mock"
+	cmock "github.com/reshifr/secure-env/core/crypto/mock"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewChaCha20Poly1305(t *testing.T) {
 	t.Parallel()
-	rng := mock.NewCSPRNG(t)
-	expCipher := &ChaCha20Poly1305[*mock.CSPRNG]{csprng: rng}
+	rng := cmock.NewCSPRNG(t)
+	expCipher := &ChaCha20Poly1305[*cmock.CSPRNG]{csprng: rng}
 	cipher := NewChaCha20Poly1305(rng)
 	assert.Equal(t, expCipher, cipher)
 }
 
 func Test_ChaCha20Poly1305_KeyLen(t *testing.T) {
 	t.Parallel()
-	cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+	cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 	expKeyLen := uint32(ChaCha20Poly1305KeyLen)
 	keyLen := cipher.KeyLen()
 	assert.Equal(t, expKeyLen, keyLen)
@@ -31,39 +31,39 @@ func Test_ChaCha20Poly1305_Seal(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(8).Once()
 		var expBuf crypto.CipherBuf = nil
 		expErr := crypto.ErrInvalidIVLen
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		buf, err := cipher.Seal(iv, nil, nil)
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(IV96Len).Once()
 		key := bytes.Repeat([]byte{0xff}, 8)
 		var expBuf crypto.CipherBuf = nil
 		expErr := crypto.ErrInvalidKeyLen
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		buf, err := cipher.Seal(iv, key, nil)
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(IV96Len).Once()
 
 		key := bytes.Repeat([]byte{0xff}, ChaCha20Poly1305KeyLen)
 		add := [ChaCha20Poly1305AddLen]byte{}
 		expErr := crypto.ErrReadEntropyFailed
 
-		rng := mock.NewCSPRNG(t)
+		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Read(add[:]).Return(expErr).Once()
 		var expBuf crypto.CipherBuf = nil
 
@@ -74,13 +74,13 @@ func Test_ChaCha20Poly1305_Seal(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		iv := mock.NewCipherIV(t)
+		iv := cmock.NewCipherIV(t)
 		iv.EXPECT().Len().Return(IV96Len).Once()
 		key, _ := hex.DecodeString(
 			"00b7f8ef132f263f63e9c5b61549b756" +
 				"4b15b9e50eb793019c888d11f4231d00")
 
-		rng := mock.NewCSPRNG(t)
+		rng := cmock.NewCSPRNG(t)
 		vAdd := [ChaCha20Poly1305AddLen]byte{}
 		add, _ := hex.DecodeString("00401aa5699c9102659eb2238c8d3348")
 		rng.EXPECT().Read(vAdd[:]).RunAndReturn(func(block []byte) error {
@@ -115,34 +115,34 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV := bytes.Repeat([]byte{0xff}, 8)
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrInvalidRawIVLen
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(nil, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV := bytes.Repeat([]byte{0xff}, IV96Len)
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key := bytes.Repeat([]byte{0xff}, 8)
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrInvalidKeyLen
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Wrong key", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV, _ := hex.DecodeString("0102030400000000000003e8")
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -159,14 +159,14 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrCipherAuthFailed
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Wrong iv", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV, _ := hex.DecodeString("0102030400000000000003e9")
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -183,14 +183,14 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrCipherAuthFailed
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Wrong add", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV, _ := hex.DecodeString("0102030400000000000003e8")
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -207,14 +207,14 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrCipherAuthFailed
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Wrong ciphertext", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV, _ := hex.DecodeString("0102030400000000000003e8")
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -231,14 +231,14 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrCipherAuthFailed
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		buf := mock.NewCipherBuf(t)
+		buf := cmock.NewCipherBuf(t)
 		rawIV, _ := hex.DecodeString("0102030400000000000003e8")
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -254,7 +254,7 @@ func Test_ChaCha20Poly1305_Open(t *testing.T) {
 		buf.EXPECT().Ciphertext().Return(ciphertext).Once()
 		expPlaintext := []byte("hlu/8djzREmN.y45arUs&uPn7piEnei1")
 
-		cipher := &ChaCha20Poly1305[*mock.CSPRNG]{}
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 		plaintext, err := cipher.Open(key, buf)
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, nil)

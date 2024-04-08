@@ -34,7 +34,7 @@ func MakeRoleSecret[
 	csprng CSPRNG,
 	cipher Cipher,
 	roleIV crypto.CipherIV) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
-	key, err := csprng.Make(int(cipher.KeyLen()))
+	key, err := csprng.Block(int(cipher.KeyLen()))
 	if err != nil {
 		return nil, crypto.ErrReadEntropyFailed
 	}

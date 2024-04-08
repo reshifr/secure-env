@@ -5,62 +5,25 @@ import (
 	"testing"
 
 	"github.com/reshifr/secure-env/core/crypto"
-	mock "github.com/reshifr/secure-env/core/crypto/mock"
+	cmock "github.com/reshifr/secure-env/core/crypto/mock"
 	"github.com/stretchr/testify/assert"
 )
-
-// func Test_Main(t *testing.T) {
-// 	kdf := Argon2{}
-// 	fnRNG := crypto.FnCSPRNG{Read: rand.Read}
-// 	rng := NewAutoRNG(fnRNG)
-// 	cipher := NewChaCha20Poly1305(rng)
-
-// 	roleIV, _ := MakeIV96(bytes.Repeat([]byte{0x11}, IV96FixedLen))
-// 	sec, _ := MakeRoleSecret(kdf, rng, cipher, roleIV)
-
-// 	userIV, _ := MakeIV96(bytes.Repeat([]byte{0x22}, IV96FixedLen))
-// 	for i := 0; i < 100; i++ {
-// 		sec.Add(userIV, "Renol")
-// 		// id, _ := sec.Add(userIV, "Renol")
-// 		// t.Logf("Id: %v\n", id)
-// 	}
-
-// 	for i := 0; i < 63; i++ {
-// 		sec.Del(int8(i))
-// 	}
-
-// 	for i := 0; i < 2; i++ {
-// 		sec.Add(userIV, "Renol")
-// 		// id, _ := sec.Add(userIV, "Renol")
-// 		// t.Logf("Id: %v\n", id)
-// 	}
-
-// 	t.Logf("Bitmap: %072b\n", sec.bitmap)
-// 	t.Logf("ObjIV: %x\n", sec.iv.Raw())
-// 	t.Logf("SharedKey: %x\n", sec.key)
-// 	for id, val := range sec.userKeys {
-// 		t.Logf("EncrKeys[%02v][  IV]: %x\n", id, val.buf.RawIV())
-// 		t.Logf("EncrKeys[%02v][ Add]: %x\n", id, val.buf.Add())
-// 		t.Logf("EncrKeys[%02v][Salt]: %x\n", id, val.salt)
-// 	}
-// 	t.Logf("EncrKeysLen: %v\n", len(sec.userKeys))
-// }
 
 func Test_MakeRoleSecret(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		kdf := mock.NewKDF(t)
-		rng := mock.NewCSPRNG(t)
-		cipher := mock.NewCipher(t)
-		roleIV := mock.NewCipherIV(t)
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
 
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		var key []byte = nil
 		expErr := crypto.ErrReadEntropyFailed
-		rng.EXPECT().Make(int(keyLen)).Return(key, expErr).Once()
-		var expSec *RoleSecret[*mock.KDF, *mock.CSPRNG, *mock.Cipher] = nil
+		rng.EXPECT().Block(int(keyLen)).Return(key, expErr).Once()
+		var expSec *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
 		sec, err := MakeRoleSecret(kdf, rng, cipher, roleIV)
 		assert.Equal(t, sec, expSec)
@@ -68,16 +31,16 @@ func Test_MakeRoleSecret(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		kdf := mock.NewKDF(t)
-		rng := mock.NewCSPRNG(t)
-		cipher := mock.NewCipher(t)
-		roleIV := mock.NewCipherIV(t)
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
 
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
-		expSec := &RoleSecret[*mock.KDF, *mock.CSPRNG, *mock.Cipher]{
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
+		expSec := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
 			kdf:      kdf,
 			csprng:   rng,
 			cipher:   cipher,
@@ -95,24 +58,25 @@ func Test_RoleSecret_Add(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrSharingExceedsLimit error", func(t *testing.T) {
 		t.Parallel()
-		kdf := mock.NewKDF(t)
-		rng := mock.NewCSPRNG(t)
-		cipher := mock.NewCipher(t)
-		roleIV := mock.NewCipherIV(t)
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
 		passphrase := "0tSYQ87UUmsmYPYcUdefmSpS18EX@_8k"
 
 		keyLen := uint32(8)
-		cipher.EXPECT().KeyLen().Return(keyLen).Times(65)
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)
 		userKey := bytes.Repeat([]byte{0xff}, int(keyLen))
+		cipher.EXPECT().KeyLen().Return(keyLen).Times(64)
 		kdf.EXPECT().Key(passphrase, salt[:], keyLen).Return(userKey).Times(64)
 
-		userIV := mock.NewCipherIV(t)
-		buf := mock.NewCipherBuf(t)
+		userIV := cmock.NewCipherIV(t)
+		buf := cmock.NewCipherBuf(t)
 		cipher.EXPECT().Seal(userIV, userKey, key).Return(buf, nil).Times(64)
 		expId := int8(-1)
 		expErr := crypto.ErrSharingExceedsLimit
@@ -120,29 +84,32 @@ func Test_RoleSecret_Add(t *testing.T) {
 		var id int8
 		var err error
 		sec, _ := MakeRoleSecret(kdf, rng, cipher, roleIV)
-		for i := 0; i < 72; i++ {
-			id, err = sec.Add(userIV, passphrase)
+		for i := 0; i < 64; i++ {
+			sec.Add(userIV, passphrase)
 		}
-		assert.Equal(t, expId, id)
-		assert.ErrorIs(t, err, expErr)
+		for i := 0; i < 8; i++ {
+			id, err = sec.Add(userIV, passphrase)
+			assert.Equal(t, expId, id)
+			assert.ErrorIs(t, err, expErr)
+		}
 	})
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		kdf := mock.NewKDF(t)
-		rng := mock.NewCSPRNG(t)
-		cipher := mock.NewCipher(t)
-		roleIV := mock.NewCipherIV(t)
-		passphrase := "0tSYQ87UUmsmYPYcUdefmSpS18EX@_8k"
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
+		passphrase := "Z0GtjpPEEcINolbGE.aeNaje8xJIqsPg"
 
 		keyLen := uint32(8)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		expErr := crypto.ErrReadEntropyFailed
 		rng.EXPECT().Read(salt[:]).Return(expErr).Once()
-		userIV := mock.NewCipherIV(t)
+		userIV := cmock.NewCipherIV(t)
 		expId := int8(-1)
 
 		sec, _ := MakeRoleSecret(kdf, rng, cipher, roleIV)
@@ -152,24 +119,25 @@ func Test_RoleSecret_Add(t *testing.T) {
 	})
 	t.Run("ErrCipherAuthFailed error", func(t *testing.T) {
 		t.Parallel()
-		kdf := mock.NewKDF(t)
-		rng := mock.NewCSPRNG(t)
-		cipher := mock.NewCipher(t)
-		roleIV := mock.NewCipherIV(t)
-		passphrase := "0tSYQ87UUmsmYPYcUdefmSpS18EX@_8k"
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
+		passphrase := "5YRCk/hyU=dI2aT6ED8zB#hA57V@2wf,"
 
 		keyLen := uint32(8)
-		cipher.EXPECT().KeyLen().Return(keyLen).Twice()
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-		rng.EXPECT().Make(int(keyLen)).Return(key, nil).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Once()
 		userKey := bytes.Repeat([]byte{0xff}, int(keyLen))
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 		kdf.EXPECT().Key(passphrase, salt[:], keyLen).Return(userKey).Once()
 
-		userIV := mock.NewCipherIV(t)
-		buf := mock.NewCipherBuf(t)
+		userIV := cmock.NewCipherIV(t)
+		buf := cmock.NewCipherBuf(t)
 		expErr := crypto.ErrCipherAuthFailed
 		cipher.EXPECT().Seal(userIV, userKey, key).Return(buf, expErr).Once()
 		expId := int8(-1)
@@ -178,5 +146,38 @@ func Test_RoleSecret_Add(t *testing.T) {
 		id, err := sec.Add(userIV, passphrase)
 		assert.Equal(t, expId, id)
 		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		roleIV := cmock.NewCipherIV(t)
+		passphrase := "KkQh+2AMK~3#Ka.gcawsjFx=tcN?xUuX"
+
+		keyLen := uint32(8)
+		key := bytes.Repeat([]byte{0xff}, int(keyLen))
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
+		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
+
+		salt := [RoleSecretSaltLen]byte{}
+		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)
+		userKey := bytes.Repeat([]byte{0xff}, int(keyLen))
+		cipher.EXPECT().KeyLen().Return(keyLen).Times(64)
+		kdf.EXPECT().Key(passphrase, salt[:], keyLen).Return(userKey).Times(64)
+
+		userIV := cmock.NewCipherIV(t)
+		buf := cmock.NewCipherBuf(t)
+		cipher.EXPECT().Seal(userIV, userKey, key).Return(buf, nil).Times(64)
+
+		var id int8
+		var err error
+		sec, _ := MakeRoleSecret(kdf, rng, cipher, roleIV)
+		for i := 0; i < 64; i++ {
+			expId := int8(64 - i - 1)
+			id, err = sec.Add(userIV, passphrase)
+			assert.Equal(t, expId, id)
+			assert.ErrorIs(t, err, nil)
+		}
 	})
 }
