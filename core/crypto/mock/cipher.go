@@ -20,6 +20,125 @@ func (_m *Cipher) EXPECT() *Cipher_Expecter {
 	return &Cipher_Expecter{mock: &_m.Mock}
 }
 
+// Decrypt provides a mock function with given fields: key, buf
+func (_m *Cipher) Decrypt(key []byte, buf crypto.CipherBuf) ([]byte, error) {
+	ret := _m.Called(key, buf)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Decrypt")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]byte, crypto.CipherBuf) ([]byte, error)); ok {
+		return rf(key, buf)
+	}
+	if rf, ok := ret.Get(0).(func([]byte, crypto.CipherBuf) []byte); ok {
+		r0 = rf(key, buf)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]byte, crypto.CipherBuf) error); ok {
+		r1 = rf(key, buf)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_Decrypt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Decrypt'
+type Cipher_Decrypt_Call struct {
+	*mock.Call
+}
+
+// Decrypt is a helper method to define mock.On call
+//   - key []byte
+//   - buf crypto.CipherBuf
+func (_e *Cipher_Expecter) Decrypt(key interface{}, buf interface{}) *Cipher_Decrypt_Call {
+	return &Cipher_Decrypt_Call{Call: _e.mock.On("Decrypt", key, buf)}
+}
+
+func (_c *Cipher_Decrypt_Call) Run(run func(key []byte, buf crypto.CipherBuf)) *Cipher_Decrypt_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte), args[1].(crypto.CipherBuf))
+	})
+	return _c
+}
+
+func (_c *Cipher_Decrypt_Call) Return(plaintext []byte, err error) *Cipher_Decrypt_Call {
+	_c.Call.Return(plaintext, err)
+	return _c
+}
+
+func (_c *Cipher_Decrypt_Call) RunAndReturn(run func([]byte, crypto.CipherBuf) ([]byte, error)) *Cipher_Decrypt_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Encrypt provides a mock function with given fields: iv, key, plaintext
+func (_m *Cipher) Encrypt(iv crypto.CipherIV, key []byte, plaintext []byte) (crypto.CipherBuf, error) {
+	ret := _m.Called(iv, key, plaintext)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Encrypt")
+	}
+
+	var r0 crypto.CipherBuf
+	var r1 error
+	if rf, ok := ret.Get(0).(func(crypto.CipherIV, []byte, []byte) (crypto.CipherBuf, error)); ok {
+		return rf(iv, key, plaintext)
+	}
+	if rf, ok := ret.Get(0).(func(crypto.CipherIV, []byte, []byte) crypto.CipherBuf); ok {
+		r0 = rf(iv, key, plaintext)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crypto.CipherBuf)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(crypto.CipherIV, []byte, []byte) error); ok {
+		r1 = rf(iv, key, plaintext)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_Encrypt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Encrypt'
+type Cipher_Encrypt_Call struct {
+	*mock.Call
+}
+
+// Encrypt is a helper method to define mock.On call
+//   - iv crypto.CipherIV
+//   - key []byte
+//   - plaintext []byte
+func (_e *Cipher_Expecter) Encrypt(iv interface{}, key interface{}, plaintext interface{}) *Cipher_Encrypt_Call {
+	return &Cipher_Encrypt_Call{Call: _e.mock.On("Encrypt", iv, key, plaintext)}
+}
+
+func (_c *Cipher_Encrypt_Call) Run(run func(iv crypto.CipherIV, key []byte, plaintext []byte)) *Cipher_Encrypt_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(crypto.CipherIV), args[1].([]byte), args[2].([]byte))
+	})
+	return _c
+}
+
+func (_c *Cipher_Encrypt_Call) Return(buf crypto.CipherBuf, err error) *Cipher_Encrypt_Call {
+	_c.Call.Return(buf, err)
+	return _c
+}
+
+func (_c *Cipher_Encrypt_Call) RunAndReturn(run func(crypto.CipherIV, []byte, []byte) (crypto.CipherBuf, error)) *Cipher_Encrypt_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // IVFixedLen provides a mock function with given fields:
 func (_m *Cipher) IVFixedLen() uint32 {
 	ret := _m.Called()
@@ -267,125 +386,6 @@ func (_c *Cipher_MakeIV_Call) Return(iv crypto.CipherIV, err error) *Cipher_Make
 }
 
 func (_c *Cipher_MakeIV_Call) RunAndReturn(run func([]byte) (crypto.CipherIV, error)) *Cipher_MakeIV_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Open provides a mock function with given fields: key, buf
-func (_m *Cipher) Open(key []byte, buf crypto.CipherBuf) ([]byte, error) {
-	ret := _m.Called(key, buf)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Open")
-	}
-
-	var r0 []byte
-	var r1 error
-	if rf, ok := ret.Get(0).(func([]byte, crypto.CipherBuf) ([]byte, error)); ok {
-		return rf(key, buf)
-	}
-	if rf, ok := ret.Get(0).(func([]byte, crypto.CipherBuf) []byte); ok {
-		r0 = rf(key, buf)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func([]byte, crypto.CipherBuf) error); ok {
-		r1 = rf(key, buf)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Cipher_Open_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Open'
-type Cipher_Open_Call struct {
-	*mock.Call
-}
-
-// Open is a helper method to define mock.On call
-//   - key []byte
-//   - buf crypto.CipherBuf
-func (_e *Cipher_Expecter) Open(key interface{}, buf interface{}) *Cipher_Open_Call {
-	return &Cipher_Open_Call{Call: _e.mock.On("Open", key, buf)}
-}
-
-func (_c *Cipher_Open_Call) Run(run func(key []byte, buf crypto.CipherBuf)) *Cipher_Open_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]byte), args[1].(crypto.CipherBuf))
-	})
-	return _c
-}
-
-func (_c *Cipher_Open_Call) Return(plaintext []byte, err error) *Cipher_Open_Call {
-	_c.Call.Return(plaintext, err)
-	return _c
-}
-
-func (_c *Cipher_Open_Call) RunAndReturn(run func([]byte, crypto.CipherBuf) ([]byte, error)) *Cipher_Open_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Seal provides a mock function with given fields: iv, key, plaintext
-func (_m *Cipher) Seal(iv crypto.CipherIV, key []byte, plaintext []byte) (crypto.CipherBuf, error) {
-	ret := _m.Called(iv, key, plaintext)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Seal")
-	}
-
-	var r0 crypto.CipherBuf
-	var r1 error
-	if rf, ok := ret.Get(0).(func(crypto.CipherIV, []byte, []byte) (crypto.CipherBuf, error)); ok {
-		return rf(iv, key, plaintext)
-	}
-	if rf, ok := ret.Get(0).(func(crypto.CipherIV, []byte, []byte) crypto.CipherBuf); ok {
-		r0 = rf(iv, key, plaintext)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(crypto.CipherBuf)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(crypto.CipherIV, []byte, []byte) error); ok {
-		r1 = rf(iv, key, plaintext)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Cipher_Seal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Seal'
-type Cipher_Seal_Call struct {
-	*mock.Call
-}
-
-// Seal is a helper method to define mock.On call
-//   - iv crypto.CipherIV
-//   - key []byte
-//   - plaintext []byte
-func (_e *Cipher_Expecter) Seal(iv interface{}, key interface{}, plaintext interface{}) *Cipher_Seal_Call {
-	return &Cipher_Seal_Call{Call: _e.mock.On("Seal", iv, key, plaintext)}
-}
-
-func (_c *Cipher_Seal_Call) Run(run func(iv crypto.CipherIV, key []byte, plaintext []byte)) *Cipher_Seal_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(crypto.CipherIV), args[1].([]byte), args[2].([]byte))
-	})
-	return _c
-}
-
-func (_c *Cipher_Seal_Call) Return(buf crypto.CipherBuf, err error) *Cipher_Seal_Call {
-	_c.Call.Return(buf, err)
-	return _c
-}
-
-func (_c *Cipher_Seal_Call) RunAndReturn(run func(crypto.CipherIV, []byte, []byte) (crypto.CipherBuf, error)) *Cipher_Seal_Call {
 	_c.Call.Return(run)
 	return _c
 }
