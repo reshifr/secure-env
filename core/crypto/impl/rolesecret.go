@@ -117,3 +117,7 @@ func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Open(
 	buf crypto.CipherBuf) ([]byte, error) {
 	return sec.cipher.Open(sec.key, buf)
 }
+
+func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Raw() {
+	// block := mak
+}

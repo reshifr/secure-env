@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ChaCha20Poly1305AddLen = chacha20poly1305.Overhead
+	ChaCha20Poly1305ADLen  = chacha20poly1305.Overhead
 	ChaCha20Poly1305KeyLen = chacha20poly1305.KeySize
 )
 
@@ -32,14 +32,14 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv crypto.CipherIV,
 	if err != nil {
 		return nil, crypto.ErrInvalidKeyLen
 	}
-	add := [ChaCha20Poly1305AddLen]byte{}
-	if err := cipher.csprng.Read(add[:]); err != nil {
+	ad := [ChaCha20Poly1305ADLen]byte{}
+	if err := cipher.csprng.Read(ad[:]); err != nil {
 		return nil, err
 	}
 	invokedIV := iv.Invoke()
 	invokedRawIV := invokedIV.Raw()
-	ciphertext := aead.Seal(nil, invokedRawIV, plaintext, add[:])
-	buf, _ := MakeChaCha20Poly1305Buf(invokedIV, add, ciphertext)
+	ciphertext := aead.Seal(nil, invokedRawIV, plaintext, ad[:])
+	buf, _ := MakeChaCha20Poly1305Buf(invokedRawIV, ad[:], ciphertext)
 	return buf, nil
 }
 
@@ -53,9 +53,9 @@ func (cipher *ChaCha20Poly1305[CSPRNG]) Open(
 	if err != nil {
 		return nil, crypto.ErrInvalidKeyLen
 	}
-	add := buf.Add()
+	ad := buf.AD()
 	ciphertext := buf.Ciphertext()
-	plaintext, err := aead.Open(nil, rawIV, ciphertext, add)
+	plaintext, err := aead.Open(nil, rawIV, ciphertext, ad)
 	if err != nil {
 		return nil, crypto.ErrCipherAuthFailed
 	}

@@ -17,12 +17,12 @@ func (_m *CipherBuf) EXPECT() *CipherBuf_Expecter {
 	return &CipherBuf_Expecter{mock: &_m.Mock}
 }
 
-// Add provides a mock function with given fields:
-func (_m *CipherBuf) Add() []byte {
+// AD provides a mock function with given fields:
+func (_m *CipherBuf) AD() []byte {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for Add")
+		panic("no return value specified for AD")
 	}
 
 	var r0 []byte
@@ -37,29 +37,29 @@ func (_m *CipherBuf) Add() []byte {
 	return r0
 }
 
-// CipherBuf_Add_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Add'
-type CipherBuf_Add_Call struct {
+// CipherBuf_AD_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AD'
+type CipherBuf_AD_Call struct {
 	*mock.Call
 }
 
-// Add is a helper method to define mock.On call
-func (_e *CipherBuf_Expecter) Add() *CipherBuf_Add_Call {
-	return &CipherBuf_Add_Call{Call: _e.mock.On("Add")}
+// AD is a helper method to define mock.On call
+func (_e *CipherBuf_Expecter) AD() *CipherBuf_AD_Call {
+	return &CipherBuf_AD_Call{Call: _e.mock.On("AD")}
 }
 
-func (_c *CipherBuf_Add_Call) Run(run func()) *CipherBuf_Add_Call {
+func (_c *CipherBuf_AD_Call) Run(run func()) *CipherBuf_AD_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run()
 	})
 	return _c
 }
 
-func (_c *CipherBuf_Add_Call) Return(add []byte) *CipherBuf_Add_Call {
-	_c.Call.Return(add)
+func (_c *CipherBuf_AD_Call) Return(ad []byte) *CipherBuf_AD_Call {
+	_c.Call.Return(ad)
 	return _c
 }
 
-func (_c *CipherBuf_Add_Call) RunAndReturn(run func() []byte) *CipherBuf_Add_Call {
+func (_c *CipherBuf_AD_Call) RunAndReturn(run func() []byte) *CipherBuf_AD_Call {
 	_c.Call.Return(run)
 	return _c
 }
