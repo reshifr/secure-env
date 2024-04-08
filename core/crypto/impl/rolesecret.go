@@ -1,11 +1,15 @@
 package crypto_impl
 
 import (
+	"encoding/binary"
+
 	"github.com/reshifr/secure-env/core/crypto"
 )
 
 const (
-	RoleSecretSaltLen = 16
+	RoleSecretSaltLen       = 16
+	RoleSecretLenOffsetSize = 8
+	RoleSecretBitmapSize    = 8
 )
 
 type roleSecretUserKey struct {
@@ -120,4 +124,32 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Encrypt(
 func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Decrypt(
 	buf crypto.CipherBuf) ([]byte, error) {
 	return secret.cipher.Decrypt(secret.key, buf)
+}
+
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
+	n := len(secret.userKeys)
+	ivLen := int(secret.cipher.IVLen())
+	allSaltLen := RoleSecretSaltLen * n
+	allBufLenOffsetSize := RoleSecretLenOffsetSize * n
+	allBufLen := 0
+	for _, userKey := range secret.userKeys {
+		allBufLen += int(userKey.buf.Len())
+	}
+	rawLen := RoleSecretBitmapSize + ivLen +
+		allSaltLen + allBufLenOffsetSize + allBufLen
+	raw := make([]byte, rawLen)
+	i := 0
+	binary.BigEndian.PutUint64(raw[i:], secret.bitmap)
+	i += RoleSecretBitmapSize
+	copy(raw[i:], secret.iv.Raw())
+	for _, userKey := range secret.userKeys {
+		i += RoleSecretSaltLen
+		copy(raw[i:], userKey.salt[:])
+		i += RoleSecretLenOffsetSize
+		bufLen := userKey.buf.Len()
+		binary.BigEndian.PutUint64(raw[i:], bufLen)
+		i += int(bufLen)
+		copy(raw[i:], userKey.buf.Raw())
+	}
+	return raw
 }

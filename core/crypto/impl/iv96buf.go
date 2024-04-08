@@ -19,10 +19,14 @@ func MakeIV96Buf(rawIV []byte, ciphertext []byte) (*IV96Buf, error) {
 
 func LoadIV96Buf(rawBuf []byte) (*IV96Buf, error) {
 	if len(rawBuf) < IV96Len {
-		return nil, crypto.ErrInvalidBuffer
+		return nil, crypto.ErrInvalidBufferLayout
 	}
 	buf := &IV96Buf{rawIV: rawBuf[:IV96Len], ciphertext: rawBuf[IV96Len:]}
 	return buf, nil
+}
+
+func (buf *IV96Buf) Len() uint64 {
+	return IV96Len + uint64(len(buf.ciphertext))
 }
 
 func (buf *IV96Buf) RawIV() []byte {

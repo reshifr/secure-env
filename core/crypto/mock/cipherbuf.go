@@ -64,6 +64,51 @@ func (_c *CipherBuf_Ciphertext_Call) RunAndReturn(run func() []byte) *CipherBuf_
 	return _c
 }
 
+// Len provides a mock function with given fields:
+func (_m *CipherBuf) Len() uint64 {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Len")
+	}
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func() uint64); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	return r0
+}
+
+// CipherBuf_Len_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Len'
+type CipherBuf_Len_Call struct {
+	*mock.Call
+}
+
+// Len is a helper method to define mock.On call
+func (_e *CipherBuf_Expecter) Len() *CipherBuf_Len_Call {
+	return &CipherBuf_Len_Call{Call: _e.mock.On("Len")}
+}
+
+func (_c *CipherBuf_Len_Call) Run(run func()) *CipherBuf_Len_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *CipherBuf_Len_Call) Return(bufLen uint64) *CipherBuf_Len_Call {
+	_c.Call.Return(bufLen)
+	return _c
+}
+
+func (_c *CipherBuf_Len_Call) RunAndReturn(run func() uint64) *CipherBuf_Len_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Raw provides a mock function with given fields:
 func (_m *CipherBuf) Raw() []byte {
 	ret := _m.Called()

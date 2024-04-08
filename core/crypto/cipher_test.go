@@ -36,10 +36,10 @@ func Test_CipherError_Error(t *testing.T) {
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})
-	t.Run("ErrInvalidBuffer value", func(t *testing.T) {
+	t.Run("ErrInvalidBufferLayout value", func(t *testing.T) {
 		t.Parallel()
-		err := ErrInvalidBuffer
-		expMsg := "ErrInvalidBuffer: the buffer structure cannot be read."
+		err := ErrInvalidBufferLayout
+		expMsg := "ErrInvalidBufferLayout: the buffer structure cannot be read."
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})

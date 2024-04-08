@@ -33,11 +33,11 @@ func Test_MakeIV96Buf(t *testing.T) {
 
 func Test_LoadIV96Buf(t *testing.T) {
 	t.Parallel()
-	t.Run("ErrInvalidBuffer error", func(t *testing.T) {
+	t.Run("ErrInvalidBufferLayout error", func(t *testing.T) {
 		t.Parallel()
 		rawBuf := bytes.Repeat([]byte{0xaa}, 8)
 		var expBuf *IV96Buf = nil
-		expErr := crypto.ErrInvalidBuffer
+		expErr := crypto.ErrInvalidBufferLayout
 		buf, err := LoadIV96Buf(rawBuf)
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, expErr)
@@ -56,6 +56,16 @@ func Test_LoadIV96Buf(t *testing.T) {
 		assert.Equal(t, expBuf, buf)
 		assert.ErrorIs(t, err, nil)
 	})
+}
+
+func Test_IV96Buf_Len(t *testing.T) {
+	t.Parallel()
+	rawIV := bytes.Repeat([]byte{0xaa}, IV96Len)
+	ciphertext := bytes.Repeat([]byte{0xbb}, 8)
+	expBufLen := IV96Len + uint64(8)
+	buf, _ := MakeIV96Buf(rawIV, ciphertext)
+	bufLen := buf.Len()
+	assert.Equal(t, expBufLen, bufLen)
 }
 
 func Test_IV96Buf_RawIV(t *testing.T) {

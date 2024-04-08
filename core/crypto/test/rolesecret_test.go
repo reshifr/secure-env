@@ -68,4 +68,9 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, msg, plaintext)
+
+	rawSecret := secret.Raw()
+	t.Logf("Bitmap: %x\n", rawSecret[0:8])
+	t.Logf("IV: %x\n", rawSecret[8:8+12])
+	t.Log(len(rawSecret))
 }

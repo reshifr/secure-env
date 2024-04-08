@@ -48,6 +48,7 @@ unit-test-coverage:
 integration-test:
 # Run all test cases
 #
+	@go clean -testcache
 	@go test \
 		-v \
 		-run '$(TEST)' \

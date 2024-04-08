@@ -7,7 +7,7 @@ const (
 	ErrInvalidIVFixedLen
 	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
-	ErrInvalidBuffer
+	ErrInvalidBufferLayout
 	ErrCipherAuthFailed
 )
 
@@ -21,8 +21,8 @@ func (err CipherError) Error() string {
 		return "ErrInvalidRawIVLen: invalid raw IV length."
 	case ErrInvalidKeyLen:
 		return "ErrInvalidKeyLen: invalid key length."
-	case ErrInvalidBuffer:
-		return "ErrInvalidBuffer: the buffer structure cannot be read."
+	case ErrInvalidBufferLayout:
+		return "ErrInvalidBufferLayout: the buffer structure cannot be read."
 	case ErrCipherAuthFailed:
 		return "ErrCipherAuthFailed: failed to decrypt the data."
 	default:
@@ -38,6 +38,7 @@ type CipherIV interface {
 }
 
 type CipherBuf interface {
+	Len() (bufLen uint64)
 	RawIV() (rawIV []byte)
 	Ciphertext() (ciphertext []byte)
 	Raw() (rawBuf []byte)
