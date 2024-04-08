@@ -27,6 +27,7 @@ func Test_MakeIV96(t *testing.T) {
 		binary.BigEndian.PutUint32(fixed[:], encFixed)
 		invocation := uint64(0)
 		expIV := &IV96{fixed: encFixed, invocation: invocation}
+
 		iv, err := MakeIV96(fixed[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, nil)

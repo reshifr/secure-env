@@ -20,6 +20,96 @@ func (_m *Cipher) EXPECT() *Cipher_Expecter {
 	return &Cipher_Expecter{mock: &_m.Mock}
 }
 
+// IVFixedLen provides a mock function with given fields:
+func (_m *Cipher) IVFixedLen() uint32 {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IVFixedLen")
+	}
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func() uint32); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	return r0
+}
+
+// Cipher_IVFixedLen_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IVFixedLen'
+type Cipher_IVFixedLen_Call struct {
+	*mock.Call
+}
+
+// IVFixedLen is a helper method to define mock.On call
+func (_e *Cipher_Expecter) IVFixedLen() *Cipher_IVFixedLen_Call {
+	return &Cipher_IVFixedLen_Call{Call: _e.mock.On("IVFixedLen")}
+}
+
+func (_c *Cipher_IVFixedLen_Call) Run(run func()) *Cipher_IVFixedLen_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Cipher_IVFixedLen_Call) Return(fixedLen uint32) *Cipher_IVFixedLen_Call {
+	_c.Call.Return(fixedLen)
+	return _c
+}
+
+func (_c *Cipher_IVFixedLen_Call) RunAndReturn(run func() uint32) *Cipher_IVFixedLen_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// IVLen provides a mock function with given fields:
+func (_m *Cipher) IVLen() uint32 {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IVLen")
+	}
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func() uint32); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	return r0
+}
+
+// Cipher_IVLen_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IVLen'
+type Cipher_IVLen_Call struct {
+	*mock.Call
+}
+
+// IVLen is a helper method to define mock.On call
+func (_e *Cipher_Expecter) IVLen() *Cipher_IVLen_Call {
+	return &Cipher_IVLen_Call{Call: _e.mock.On("IVLen")}
+}
+
+func (_c *Cipher_IVLen_Call) Run(run func()) *Cipher_IVLen_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Cipher_IVLen_Call) Return(ivLen uint32) *Cipher_IVLen_Call {
+	_c.Call.Return(ivLen)
+	return _c
+}
+
+func (_c *Cipher_IVLen_Call) RunAndReturn(run func() uint32) *Cipher_IVLen_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // KeyLen provides a mock function with given fields:
 func (_m *Cipher) KeyLen() uint32 {
 	ret := _m.Called()
@@ -61,6 +151,122 @@ func (_c *Cipher_KeyLen_Call) Return(keyLen uint32) *Cipher_KeyLen_Call {
 }
 
 func (_c *Cipher_KeyLen_Call) RunAndReturn(run func() uint32) *Cipher_KeyLen_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// LoadIV provides a mock function with given fields: rawIV
+func (_m *Cipher) LoadIV(rawIV []byte) (crypto.CipherIV, error) {
+	ret := _m.Called(rawIV)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LoadIV")
+	}
+
+	var r0 crypto.CipherIV
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]byte) (crypto.CipherIV, error)); ok {
+		return rf(rawIV)
+	}
+	if rf, ok := ret.Get(0).(func([]byte) crypto.CipherIV); ok {
+		r0 = rf(rawIV)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crypto.CipherIV)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]byte) error); ok {
+		r1 = rf(rawIV)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_LoadIV_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LoadIV'
+type Cipher_LoadIV_Call struct {
+	*mock.Call
+}
+
+// LoadIV is a helper method to define mock.On call
+//   - rawIV []byte
+func (_e *Cipher_Expecter) LoadIV(rawIV interface{}) *Cipher_LoadIV_Call {
+	return &Cipher_LoadIV_Call{Call: _e.mock.On("LoadIV", rawIV)}
+}
+
+func (_c *Cipher_LoadIV_Call) Run(run func(rawIV []byte)) *Cipher_LoadIV_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte))
+	})
+	return _c
+}
+
+func (_c *Cipher_LoadIV_Call) Return(iv crypto.CipherIV, err error) *Cipher_LoadIV_Call {
+	_c.Call.Return(iv, err)
+	return _c
+}
+
+func (_c *Cipher_LoadIV_Call) RunAndReturn(run func([]byte) (crypto.CipherIV, error)) *Cipher_LoadIV_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// MakeIV provides a mock function with given fields: fixed
+func (_m *Cipher) MakeIV(fixed []byte) (crypto.CipherIV, error) {
+	ret := _m.Called(fixed)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MakeIV")
+	}
+
+	var r0 crypto.CipherIV
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]byte) (crypto.CipherIV, error)); ok {
+		return rf(fixed)
+	}
+	if rf, ok := ret.Get(0).(func([]byte) crypto.CipherIV); ok {
+		r0 = rf(fixed)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crypto.CipherIV)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]byte) error); ok {
+		r1 = rf(fixed)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_MakeIV_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'MakeIV'
+type Cipher_MakeIV_Call struct {
+	*mock.Call
+}
+
+// MakeIV is a helper method to define mock.On call
+//   - fixed []byte
+func (_e *Cipher_Expecter) MakeIV(fixed interface{}) *Cipher_MakeIV_Call {
+	return &Cipher_MakeIV_Call{Call: _e.mock.On("MakeIV", fixed)}
+}
+
+func (_c *Cipher_MakeIV_Call) Run(run func(fixed []byte)) *Cipher_MakeIV_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte))
+	})
+	return _c
+}
+
+func (_c *Cipher_MakeIV_Call) Return(iv crypto.CipherIV, err error) *Cipher_MakeIV_Call {
+	_c.Call.Return(iv, err)
+	return _c
+}
+
+func (_c *Cipher_MakeIV_Call) RunAndReturn(run func([]byte) (crypto.CipherIV, error)) *Cipher_MakeIV_Call {
 	_c.Call.Return(run)
 	return _c
 }

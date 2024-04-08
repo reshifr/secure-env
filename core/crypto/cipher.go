@@ -48,7 +48,11 @@ type CipherBuf interface {
 }
 
 type Cipher interface {
+	IVLen() (ivLen uint32)
+	IVFixedLen() (fixedLen uint32)
 	KeyLen() (keyLen uint32)
+	MakeIV(fixed []byte) (iv CipherIV, err error)
+	LoadIV(rawIV []byte) (iv CipherIV, err error)
 	Seal(iv CipherIV, key []byte, plaintext []byte) (buf CipherBuf, err error)
 	Open(key []byte, buf CipherBuf) (plaintext []byte, err error)
 }

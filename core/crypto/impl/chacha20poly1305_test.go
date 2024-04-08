@@ -19,12 +19,83 @@ func Test_NewChaCha20Poly1305(t *testing.T) {
 	assert.Equal(t, expCipher, cipher)
 }
 
+func Test_ChaCha20Poly1305_IVLen(t *testing.T) {
+	t.Parallel()
+	cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+	expKeyLen := uint32(IV96Len)
+	keyLen := cipher.IVLen()
+	assert.Equal(t, expKeyLen, keyLen)
+}
+
+func Test_ChaCha20Poly1305_IVFixedLen(t *testing.T) {
+	t.Parallel()
+	cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+	expKeyLen := uint32(IV96FixedLen)
+	keyLen := cipher.IVFixedLen()
+	assert.Equal(t, expKeyLen, keyLen)
+}
+
 func Test_ChaCha20Poly1305_KeyLen(t *testing.T) {
 	t.Parallel()
 	cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
 	expKeyLen := uint32(ChaCha20Poly1305KeyLen)
 	keyLen := cipher.KeyLen()
 	assert.Equal(t, expKeyLen, keyLen)
+}
+
+func Test_ChaCha20Poly1305_MakeIV(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrInvalidIVFixedLen error", func(t *testing.T) {
+		t.Parallel()
+		fixed := [2]byte{}
+		var expIV *IV96 = nil
+		expErr := crypto.ErrInvalidIVFixedLen
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+		iv, err := cipher.MakeIV(fixed[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		fixed := [IV96FixedLen]byte{}
+		encFixed := uint32(0x01020304)
+		binary.BigEndian.PutUint32(fixed[:], encFixed)
+		invocation := uint64(0)
+		expIV := &IV96{fixed: encFixed, invocation: invocation}
+
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+		iv, err := cipher.MakeIV(fixed[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, nil)
+	})
+}
+
+func Test_ChaCha20Poly1305_LoadIV(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
+		t.Parallel()
+		rawIV := [4]byte{}
+		var expIV *IV96 = nil
+		expErr := crypto.ErrInvalidRawIVLen
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+		iv, err := cipher.LoadIV(rawIV[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		fixed := uint32(0x01020304)
+		invocation := uint64(0x0b16212c37424d58)
+		rawIV := [IV96Len]byte{}
+		binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], fixed)
+		binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], invocation)
+		expIV := &IV96{fixed: fixed, invocation: invocation}
+
+		cipher := &ChaCha20Poly1305[*cmock.CSPRNG]{}
+		iv, err := cipher.LoadIV(rawIV[:])
+		assert.Equal(t, expIV, iv)
+		assert.ErrorIs(t, err, nil)
+	})
 }
 
 func Test_ChaCha20Poly1305_Seal(t *testing.T) {

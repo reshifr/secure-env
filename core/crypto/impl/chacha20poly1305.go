@@ -19,8 +19,24 @@ func NewChaCha20Poly1305[CSPRNG crypto.CSPRNG](
 	return &ChaCha20Poly1305[CSPRNG]{csprng: csprng}
 }
 
+func (*ChaCha20Poly1305[CSPRNG]) IVLen() uint32 {
+	return IV96Len
+}
+
+func (*ChaCha20Poly1305[CSPRNG]) IVFixedLen() uint32 {
+	return IV96FixedLen
+}
+
 func (*ChaCha20Poly1305[CSPRNG]) KeyLen() uint32 {
 	return ChaCha20Poly1305KeyLen
+}
+
+func (*ChaCha20Poly1305[CSPRNG]) MakeIV(fixed []byte) (crypto.CipherIV, error) {
+	return MakeIV96(fixed)
+}
+
+func (*ChaCha20Poly1305[CSPRNG]) LoadIV(rawIV []byte) (crypto.CipherIV, error) {
+	return LoadIV96(rawIV)
 }
 
 func (cipher *ChaCha20Poly1305[CSPRNG]) Seal(iv crypto.CipherIV,

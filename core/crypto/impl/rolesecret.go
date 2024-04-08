@@ -32,17 +32,21 @@ func MakeRoleSecret[
 	Cipher crypto.Cipher](
 	kdf KDF,
 	csprng CSPRNG,
-	cipher Cipher,
-	roleIV crypto.CipherIV) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
+	cipher Cipher) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
 	key, err := csprng.Block(int(cipher.KeyLen()))
 	if err != nil {
-		return nil, crypto.ErrReadEntropyFailed
+		return nil, err
 	}
+	fixed, err := csprng.Block(int(cipher.IVFixedLen()))
+	if err != nil {
+		return nil, err
+	}
+	iv, _ := cipher.MakeIV(fixed)
 	sec := &RoleSecret[KDF, CSPRNG, Cipher]{
 		kdf:      kdf,
 		csprng:   csprng,
 		cipher:   cipher,
-		iv:       roleIV,
+		iv:       iv,
 		key:      key,
 		userKeys: make(map[int8]roleSecretUserKey),
 	}
