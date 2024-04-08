@@ -36,13 +36,6 @@ func Test_CipherError_Error(t *testing.T) {
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})
-	t.Run("ErrInvalidADLen value", func(t *testing.T) {
-		t.Parallel()
-		err := ErrInvalidADLen
-		expMsg := "ErrInvalidADLen: invalid additional data length."
-		msg := err.Error()
-		assert.Equal(t, expMsg, msg)
-	})
 	t.Run("ErrInvalidBuffer value", func(t *testing.T) {
 		t.Parallel()
 		err := ErrInvalidBuffer
