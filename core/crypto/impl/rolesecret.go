@@ -14,7 +14,7 @@ const (
 	RoleSecretBufLenSize = 8
 )
 
-type RoleSecretUserKey struct {
+type RoleSecretSharedKey struct {
 	buf  crypto.CipherBuf
 	salt [RoleSecretSaltLen]byte
 }
@@ -23,13 +23,13 @@ type RoleSecret[
 	KDF crypto.KDF,
 	CSPRNG crypto.CSPRNG,
 	Cipher crypto.Cipher] struct {
-	kdf      KDF
-	csprng   CSPRNG
-	cipher   Cipher
-	bitmap   uint64
-	iv       crypto.CipherIV
-	key      []byte
-	userKeys *avl.Tree[int8, RoleSecretUserKey]
+	kdf    KDF
+	csprng CSPRNG
+	cipher Cipher
+	bitmap uint64
+	iv     crypto.CipherIV
+	key    []byte
+	shared *avl.Tree[int8, RoleSecretSharedKey]
 }
 
 func MakeRoleSecret[
@@ -49,12 +49,12 @@ func MakeRoleSecret[
 	}
 	iv, _ := cipher.LoadIV(rawIV)
 	secret := &RoleSecret[KDF, CSPRNG, Cipher]{
-		kdf:      kdf,
-		csprng:   csprng,
-		cipher:   cipher,
-		iv:       iv,
-		key:      key,
-		userKeys: avl.New[int8, RoleSecretUserKey](),
+		kdf:    kdf,
+		csprng: csprng,
+		cipher: cipher,
+		iv:     iv,
+		key:    key,
+		shared: avl.New[int8, RoleSecretSharedKey](),
 	}
 	return secret, nil
 }
@@ -128,9 +128,9 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
 		return -1, err
 	}
 	id := bits.TrailingZeros64(^secret.bitmap)
-	userKey := RoleSecretUserKey{buf: buf, salt: salt}
+	sharedKey := RoleSecretSharedKey{buf: buf, salt: salt}
 	secret.bitmap |= 1 << id
-	secret.userKeys.Put(int8(id), userKey)
+	secret.shared.Put(int8(id), sharedKey)
 	return id, nil
 }
 
@@ -154,7 +154,7 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Decrypt(
 }
 
 func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
-	n := secret.userKeys.Size()
+	n := secret.shared.Size()
 	if n == 0 {
 		return nil
 	}
@@ -162,10 +162,10 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	allBufLen := 0
 	allSaltLen := 0
 	ivLen := int(secret.cipher.IVLen())
-	it := secret.userKeys.Iterator()
+	it := secret.shared.Iterator()
 	for it.Begin(); it.Next(); {
-		userKey := it.Value()
-		bufLen = int(userKey.buf.Len())
+		sharedKey := it.Value()
+		bufLen = int(sharedKey.buf.Len())
 		allBufLen += bufLen * n
 		allSaltLen += RoleSecretSaltLen * n
 		break
@@ -182,10 +182,10 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	copy(raw[i:], secret.iv.Raw())
 	i += ivLen
 	for it.Begin(); it.Next(); {
-		userKey := it.Value()
-		copy(raw[i:], userKey.salt[:])
+		sharedKey := it.Value()
+		copy(raw[i:], sharedKey.salt[:])
 		i += RoleSecretSaltLen
-		copy(raw[i:], userKey.buf.Raw())
+		copy(raw[i:], sharedKey.buf.Raw())
 		i += bufLen
 	}
 	return raw

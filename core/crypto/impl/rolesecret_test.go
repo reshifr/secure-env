@@ -68,15 +68,17 @@ func Test_MakeRoleSecret(t *testing.T) {
 		iv := cmock.NewCipherIV(t)
 		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
-			kdf:      kdf,
-			csprng:   rng,
-			cipher:   cipher,
-			iv:       iv,
-			key:      key,
-			userKeys: avl.New[int8, RoleSecretUserKey](),
+			kdf:    kdf,
+			csprng: rng,
+			cipher: cipher,
+			iv:     iv,
+			key:    key,
+			shared: avl.New[int8, RoleSecretSharedKey](),
 		}
 
 		secret, err := MakeRoleSecret(kdf, rng, cipher)
+		secret.shared = nil
+		expSecret.shared = nil
 		assert.Equal(t, secret, expSecret)
 		assert.ErrorIs(t, err, nil)
 	})
