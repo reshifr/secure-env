@@ -2,8 +2,8 @@ package crypto_impl
 
 import (
 	"encoding/binary"
+	"math/bits"
 
-	"github.com/reshifr/secure-env/core/bits"
 	"github.com/reshifr/secure-env/core/crypto"
 )
 
@@ -83,7 +83,7 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
 	if err != nil {
 		return -1, err
 	}
-	id := bits.CTZ64(^secret.bitmap)
+	id := bits.TrailingZeros64(^secret.bitmap)
 	secret.bitmap |= 1 << id
 	secret.userKeys[int8(id)] = roleSecretUserKey{buf: buf, salt: salt}
 	return id, nil

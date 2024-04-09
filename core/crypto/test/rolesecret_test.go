@@ -72,7 +72,8 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 
 	raw := secret.Raw()
 	i := 0
-	t.Logf("Bitmap: %x\n", raw[i:i+cimpl.RoleSecretBitmapSize])
+	bitmap := binary.BigEndian.Uint64(raw[i:])
+	t.Logf("Bitmap: %064b\n", bitmap)
 	i += cimpl.RoleSecretBitmapSize
 	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
 	t.Logf("BufLen: %v\n", bufLen)
