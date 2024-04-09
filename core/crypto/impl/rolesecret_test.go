@@ -28,7 +28,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 		assert.Equal(t, secret, expSecret)
 		assert.ErrorIs(t, err, expErr)
 	})
-	t.Run("Fixed ErrReadEntropyFailed error", func(t *testing.T) {
+	t.Run("RawIV ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
 		kdf := cmock.NewKDF(t)
 		rng := cmock.NewCSPRNG(t)
@@ -39,10 +39,10 @@ func Test_MakeRoleSecret(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
 		expErr := crypto.ErrReadEntropyFailed
-		rng.EXPECT().Block(int(fixedLen)).Return(key, expErr).Once()
+		rng.EXPECT().Block(int(rawIVLen)).Return(key, expErr).Once()
 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
 		secret, err := MakeRoleSecret(kdf, rng, cipher)
@@ -60,12 +60,12 @@ func Test_MakeRoleSecret(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
-		fixed := bytes.Repeat([]byte{0xff}, int(fixedLen))
-		rng.EXPECT().Block(int(fixedLen)).Return(fixed, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 		iv := cmock.NewCipherIV(t)
-		cipher.EXPECT().MakeIV(fixed).Return(iv, nil).Once()
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
 			kdf:      kdf,
 			csprng:   rng,
@@ -95,12 +95,12 @@ func Test_RoleSecret_Add(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
-		fixed := bytes.Repeat([]byte{0xff}, int(fixedLen))
-		rng.EXPECT().Block(int(fixedLen)).Return(fixed, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 		iv := cmock.NewCipherIV(t)
-		cipher.EXPECT().MakeIV(fixed).Return(iv, nil).Once()
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)
@@ -138,12 +138,12 @@ func Test_RoleSecret_Add(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
-		fixed := bytes.Repeat([]byte{0xff}, int(fixedLen))
-		rng.EXPECT().Block(int(fixedLen)).Return(fixed, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 		iv := cmock.NewCipherIV(t)
-		cipher.EXPECT().MakeIV(fixed).Return(iv, nil).Once()
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		expErr := crypto.ErrReadEntropyFailed
@@ -168,12 +168,12 @@ func Test_RoleSecret_Add(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
-		fixed := bytes.Repeat([]byte{0xff}, int(fixedLen))
-		rng.EXPECT().Block(int(fixedLen)).Return(fixed, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 		iv := cmock.NewCipherIV(t)
-		cipher.EXPECT().MakeIV(fixed).Return(iv, nil).Once()
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Once()
@@ -204,12 +204,12 @@ func Test_RoleSecret_Add(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		fixedLen := uint32(4)
-		cipher.EXPECT().IVFixedLen().Return(fixedLen)
-		fixed := bytes.Repeat([]byte{0xff}, int(fixedLen))
-		rng.EXPECT().Block(int(fixedLen)).Return(fixed, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 		iv := cmock.NewCipherIV(t)
-		cipher.EXPECT().MakeIV(fixed).Return(iv, nil).Once()
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 
 		salt := [RoleSecretSaltLen]byte{}
 		rng.EXPECT().Read(salt[:]).Return(nil).Times(64)

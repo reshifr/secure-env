@@ -11,11 +11,11 @@ import (
 
 func Test_IV96_Invoke_Concurrently(t *testing.T) {
 	t.Parallel()
-	fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
-	iv, _ := cimpl.MakeIV96(fixed)
 	executed := uint64(1000)
-	rawIV := binary.BigEndian.AppendUint32(nil, 0x01020304)
+	fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
+	rawIV := append([]byte{}, fixed...)
 	rawIV = binary.BigEndian.AppendUint64(rawIV, executed)
+	iv, _ := cimpl.MakeIV96(fixed)
 	expIV, _ := cimpl.LoadIV96(rawIV)
 
 	rawIVs := map[[cimpl.IV96Len]byte]struct{}{}
@@ -35,5 +35,23 @@ func Test_IV96_Invoke_Concurrently(t *testing.T) {
 	}
 	wg.Wait()
 	assert.Equal(t, expIV, iv)
+	assert.Equal(t, executed, uint64(len(rawIVs)))
+}
+
+func Test_IV96_Invoke_Invocation_Overflow(t *testing.T) {
+	t.Parallel()
+	executed := uint64(1000)
+	rawIV := [cimpl.IV96Len]byte{
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0x00,
+	}
+	iv, _ := cimpl.LoadIV96(rawIV[:])
+	rawIVs := map[[cimpl.IV96Len]byte]struct{}{}
+	for i := 0; i < int(executed); i++ {
+		newIV := iv.Invoke()
+		vRawIV := [cimpl.IV96Len]byte{}
+		copy(vRawIV[:], newIV.Raw())
+		rawIVs[vRawIV] = struct{}{}
+	}
 	assert.Equal(t, executed, uint64(len(rawIVs)))
 }

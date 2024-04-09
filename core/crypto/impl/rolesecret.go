@@ -41,11 +41,11 @@ func MakeRoleSecret[
 	if err != nil {
 		return nil, err
 	}
-	fixed, err := csprng.Block(int(cipher.IVFixedLen()))
+	rawIV, err := csprng.Block(int(cipher.IVLen()))
 	if err != nil {
 		return nil, err
 	}
-	iv, _ := cipher.MakeIV(fixed)
+	iv, _ := cipher.LoadIV(rawIV)
 	secret := &RoleSecret[KDF, CSPRNG, Cipher]{
 		kdf:      kdf,
 		csprng:   csprng,

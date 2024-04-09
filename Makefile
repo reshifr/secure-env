@@ -31,6 +31,7 @@ unit-test:
 # Run all test cases
 #
 	@mkdir -p $(UNIT_TEST_BUILD_DIR)
+	@go clean -testcache
 	@go test \
 		-v \
 		-coverprofile=coverage.out \
