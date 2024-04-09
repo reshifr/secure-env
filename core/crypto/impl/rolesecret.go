@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	RoleSecretSaltLen       = 16
-	RoleSecretLenOffsetSize = 8
-	RoleSecretBitmapSize    = 8
+	RoleSecretSaltLen    = 16
+	RoleSecretBitmapSize = 8
+	RoleSecretBufLenSize = 8
 )
 
 type roleSecretUserKey struct {
@@ -128,28 +128,37 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Decrypt(
 
 func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	n := len(secret.userKeys)
-	ivLen := int(secret.cipher.IVLen())
-	allSaltLen := RoleSecretSaltLen * n
-	allBufLenOffsetSize := RoleSecretLenOffsetSize * n
-	allBufLen := 0
-	for _, userKey := range secret.userKeys {
-		allBufLen += int(userKey.buf.Len())
+	if n == 0 {
+		return nil
 	}
+
+	bufLen := 0
+	allBufLen := 0
+	allSaltLen := 0
+	ivLen := int(secret.cipher.IVLen())
+	for _, userKey := range secret.userKeys {
+		bufLen = int(userKey.buf.Len())
+		allBufLen += bufLen * n
+		allSaltLen += RoleSecretSaltLen * n
+		break
+	}
+
 	rawLen := RoleSecretBitmapSize + ivLen +
-		allSaltLen + allBufLenOffsetSize + allBufLen
+		RoleSecretBufLenSize + allSaltLen + allBufLen
 	raw := make([]byte, rawLen)
+
 	i := 0
 	binary.BigEndian.PutUint64(raw[i:], secret.bitmap)
 	i += RoleSecretBitmapSize
+	binary.BigEndian.PutUint64(raw[i:], uint64(bufLen))
+	i += RoleSecretBufLenSize
 	copy(raw[i:], secret.iv.Raw())
+	i += ivLen
 	for _, userKey := range secret.userKeys {
-		i += RoleSecretSaltLen
 		copy(raw[i:], userKey.salt[:])
-		i += RoleSecretLenOffsetSize
-		bufLen := userKey.buf.Len()
-		binary.BigEndian.PutUint64(raw[i:], bufLen)
-		i += int(bufLen)
+		i += RoleSecretSaltLen
 		copy(raw[i:], userKey.buf.Raw())
+		i += bufLen
 	}
 	return raw
 }

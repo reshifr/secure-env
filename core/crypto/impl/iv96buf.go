@@ -39,7 +39,7 @@ func (buf *IV96Buf) Ciphertext() []byte {
 
 func (buf *IV96Buf) Raw() []byte {
 	rawBuf := make([]byte, IV96Len+len(buf.ciphertext))
-	copy(rawBuf[:IV96Len], buf.rawIV)
+	copy(rawBuf[:], buf.rawIV)
 	copy(rawBuf[IV96Len:], buf.ciphertext)
 	return rawBuf
 }

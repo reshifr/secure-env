@@ -3,6 +3,7 @@ package crypto_test
 import (
 	"crypto/md5"
 	"crypto/rand"
+	"encoding/binary"
 	"testing"
 
 	c "github.com/reshifr/secure-env/core/crypto"
@@ -69,8 +70,24 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 	}
 	assert.Equal(t, msg, plaintext)
 
-	rawSecret := secret.Raw()
-	t.Logf("Bitmap: %x\n", rawSecret[0:8])
-	t.Logf("IV: %x\n", rawSecret[8:8+12])
-	t.Log(len(rawSecret))
+	raw := secret.Raw()
+	i := 0
+	t.Logf("Bitmap: %x\n", raw[i:i+cimpl.RoleSecretBitmapSize])
+	i += cimpl.RoleSecretBitmapSize
+	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
+	t.Logf("BufLen: %v\n", bufLen)
+	i += cimpl.RoleSecretBufLenSize
+	t.Logf("IV: %x\n", raw[i:i+cimpl.IV96Len])
+	i += cimpl.IV96Len
+	order := 0
+	for len(raw[i:]) != 0 {
+		t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.RoleSecretSaltLen])
+		i += cimpl.RoleSecretSaltLen
+		t.Logf("Buf[%v]: %x\n", order, raw[i:i+bufLen])
+		i += bufLen
+		order++
+	}
+
+	t.Log(len(raw))
+	t.Log(i)
 }
