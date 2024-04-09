@@ -3,6 +3,7 @@ package crypto_impl
 import (
 	"encoding/binary"
 
+	"github.com/reshifr/secure-env/core/bits"
 	"github.com/reshifr/secure-env/core/crypto"
 )
 
@@ -57,40 +58,20 @@ func MakeRoleSecret[
 	return secret, nil
 }
 
-func (secret *RoleSecret[KDF, CSPRNG, Cipher]) userId() int8 {
-	i := int8(0)
-	n := ^secret.bitmap
-	if n >= 0x0000000100000000 {
-		i += 32
-		n >>= 32
-	}
-	if n >= 0x0000000000010000 {
-		i += 16
-		n >>= 16
-	}
-	if n >= 0x0000000000000100 {
-		i += 8
-		n >>= 8
-	}
-	if n >= 0x0000000000000010 {
-		i += 4
-		n >>= 4
-	}
-	if n >= 0x0000000000000004 {
-		i += 2
-		n >>= 2
-	}
-	if n >= 0x0000000000000002 {
-		i += 1
-		n >>= 1
-	}
-	secret.bitmap |= 1 << i
-	return i
+func LoadRoleSecret[
+	KDF crypto.KDF,
+	CSPRNG crypto.CSPRNG,
+	Cipher crypto.Cipher](
+	kdf KDF,
+	csprng CSPRNG,
+	cipher Cipher,
+	passphrase string) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
+	return nil, nil
 }
 
 func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
-	iv crypto.CipherIV, passphrase string) (int8, error) {
-	if ^secret.bitmap == 0 {
+	iv crypto.CipherIV, passphrase string) (int, error) {
+	if secret.bitmap == 0xffffffffffffffff {
 		return -1, crypto.ErrSharingExceedsLimit
 	}
 	salt := [RoleSecretSaltLen]byte{}
@@ -102,8 +83,9 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
 	if err != nil {
 		return -1, err
 	}
-	id := secret.userId()
-	secret.userKeys[id] = roleSecretUserKey{buf: buf, salt: salt}
+	id := bits.CTZ64(^secret.bitmap)
+	secret.bitmap |= 1 << id
+	secret.userKeys[int8(id)] = roleSecretUserKey{buf: buf, salt: salt}
 	return id, nil
 }
 
@@ -131,7 +113,6 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	if n == 0 {
 		return nil
 	}
-
 	bufLen := 0
 	allBufLen := 0
 	allSaltLen := 0
@@ -142,7 +123,6 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 		allSaltLen += RoleSecretSaltLen * n
 		break
 	}
-
 	rawLen := RoleSecretBitmapSize + ivLen +
 		RoleSecretBufLenSize + allSaltLen + allBufLen
 	raw := make([]byte, rawLen)

@@ -111,17 +111,14 @@ func Test_RoleSecret_Add(t *testing.T) {
 		userIV := cmock.NewCipherIV(t)
 		buf := cmock.NewCipherBuf(t)
 		cipher.EXPECT().Encrypt(userIV, userKey, key).Return(buf, nil).Times(64)
-		expId := int8(-1)
+		expId := -1
 		expErr := crypto.ErrSharingExceedsLimit
-
-		var id int8
-		var err error
 		secret, _ := MakeRoleSecret(kdf, rng, cipher)
 		for i := 0; i < 64; i++ {
 			secret.Add(userIV, passphrase)
 		}
 		for i := 0; i < 8; i++ {
-			id, err = secret.Add(userIV, passphrase)
+			id, err := secret.Add(userIV, passphrase)
 			assert.Equal(t, expId, id)
 			assert.ErrorIs(t, err, expErr)
 		}
@@ -149,7 +146,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		expErr := crypto.ErrReadEntropyFailed
 		rng.EXPECT().Read(salt[:]).Return(expErr).Once()
 		userIV := cmock.NewCipherIV(t)
-		expId := int8(-1)
+		expId := -1
 
 		secret, _ := MakeRoleSecret(kdf, rng, cipher)
 		id, err := secret.Add(userIV, passphrase)
@@ -185,7 +182,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		buf := cmock.NewCipherBuf(t)
 		expErr := crypto.ErrCipherAuthFailed
 		cipher.EXPECT().Encrypt(userIV, userKey, key).Return(buf, expErr).Once()
-		expId := int8(-1)
+		expId := -1
 
 		secret, _ := MakeRoleSecret(kdf, rng, cipher)
 		id, err := secret.Add(userIV, passphrase)
@@ -220,13 +217,9 @@ func Test_RoleSecret_Add(t *testing.T) {
 		userIV := cmock.NewCipherIV(t)
 		buf := cmock.NewCipherBuf(t)
 		cipher.EXPECT().Encrypt(userIV, userKey, key).Return(buf, nil).Times(64)
-
-		var id int8
-		var err error
 		secret, _ := MakeRoleSecret(kdf, rng, cipher)
-		for i := 0; i < 64; i++ {
-			expId := int8(64 - i - 1)
-			id, err = secret.Add(userIV, passphrase)
+		for expId := 0; expId < 64; expId++ {
+			id, err := secret.Add(userIV, passphrase)
 			assert.Equal(t, expId, id)
 			assert.ErrorIs(t, err, nil)
 		}

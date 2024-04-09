@@ -1,6 +1,7 @@
 package crypto_test
 
 import (
+	"bytes"
 	"encoding/binary"
 	"sync"
 	"testing"
@@ -15,7 +16,7 @@ func Test_IV96_Invoke(t *testing.T) {
 		t.Parallel()
 		executed := uint64(1000)
 		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
-		rawIV := append([]byte{}, fixed...)
+		rawIV := bytes.Clone(fixed)
 		rawIV = binary.BigEndian.AppendUint64(rawIV, executed)
 		iv, _ := cimpl.MakeIV96(fixed)
 		expIV, _ := cimpl.LoadIV96(rawIV)
