@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	avl "github.com/emirpasic/gods/v2/trees/avltree"
 	"github.com/reshifr/secure-env/core/crypto"
 	cmock "github.com/reshifr/secure-env/core/crypto/mock"
 	"github.com/stretchr/testify/assert"
@@ -72,7 +73,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 			cipher:   cipher,
 			iv:       iv,
 			key:      key,
-			userKeys: make(map[int8]roleSecretUserKey),
+			userKeys: avl.New[int8, RoleSecretUserKey](),
 		}
 
 		secret, err := MakeRoleSecret(kdf, rng, cipher)

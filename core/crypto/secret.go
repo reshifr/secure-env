@@ -4,6 +4,7 @@ type SecretError int
 
 const (
 	ErrSharingExceedsLimit SecretError = iota + 1
+	ErrInvalidSecretId
 )
 
 func (SecretError) Error() string {
