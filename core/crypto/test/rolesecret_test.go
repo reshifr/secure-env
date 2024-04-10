@@ -3,6 +3,7 @@ package crypto_test
 import (
 	"crypto/md5"
 	"crypto/rand"
+	"encoding/binary"
 	"testing"
 
 	c "github.com/reshifr/secure-env/core/crypto"
@@ -13,9 +14,8 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-func Test_RoleSecret_Make_Seal_Open(t *testing.T) {
+func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 	t.Parallel()
-
 	kdf := cmock.NewKDF(t)
 	kdf.EXPECT().Key(mock.Anything, mock.Anything, mock.Anything).RunAndReturn(
 		func(passphrase string, salt []byte, keyLen uint32) []byte {
@@ -27,22 +27,18 @@ func Test_RoleSecret_Make_Seal_Open(t *testing.T) {
 
 	fnRNG := c.FnCSPRNG{Read: rand.Read}
 	rng := cimpl.NewAutoRNG(fnRNG)
-	cipher := cimpl.NewChaCha20Poly1305(rng)
+	cipher := cimpl.ChaCha20Poly1305AE{}
 
 	fixed := [cimpl.IV96FixedLen]byte{}
 	if err := rng.Read(fixed[:]); err != nil {
 		t.Fatal(err)
 	}
-	roleIV, err := cimpl.MakeIV96(fixed[:])
-	if err != nil {
-		t.Fatal(err)
-	}
-	sec, err := cimpl.MakeRoleSecret(kdf, rng, cipher, roleIV)
+	secret, err := cimpl.MakeRoleSecret(kdf, rng, cipher)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	passphrases := [...]string{
+	passphrases := []string{
 		"RodGY-gV7vpz6FHZ6zEKQEhl1.kKz1S,",
 		",zNdmrWKH1NKp.9JT5HzaW=zlD,?PMI#",
 		"lymHS7/.Zwcv-nBWjs6V3O~r@1T~fRCN",
@@ -56,21 +52,40 @@ func Test_RoleSecret_Make_Seal_Open(t *testing.T) {
 		if err := rng.Read(fixed[:]); err != nil {
 			t.Fatal(err)
 		}
-		userIV, err := cimpl.MakeIV96(fixed[:])
+		iv, err := cimpl.MakeIV96(fixed[:])
 		if err != nil {
 			t.Fatal(err)
 		}
-		sec.Add(userIV, passphrase)
+		secret.Add(iv, passphrase)
 	}
 
 	msg := []byte("Hello, World!")
-	buf, err := sec.Seal(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	plaintext, err := sec.Open(buf)
+	buf := secret.Encrypt(msg)
+	plaintext, err := secret.Decrypt(buf)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, msg, plaintext)
+
+	raw := secret.Raw()
+	i := 0
+	bitmap := binary.BigEndian.Uint64(raw[i:])
+	t.Logf("Bitmap: %064b\n", bitmap)
+	i += cimpl.RoleSecretBitmapSize
+	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
+	t.Logf("BufLen: %v\n", bufLen)
+	i += cimpl.RoleSecretBufLenSize
+	t.Logf("IV: %x\n", raw[i:i+cimpl.IV96Len])
+	i += cimpl.IV96Len
+	order := 0
+	for len(raw[i:]) != 0 {
+		t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.RoleSecretSaltLen])
+		i += cimpl.RoleSecretSaltLen
+		t.Logf("Buf[%v]: %x\n", order, raw[i:i+bufLen])
+		i += bufLen
+		order++
+	}
+
+	t.Log(len(raw))
+	t.Log(i)
 }

@@ -1,29 +1,36 @@
 package crypto_impl
 
 import (
+	"encoding/binary"
+	"math/bits"
+
+	avl "github.com/emirpasic/gods/v2/trees/avltree"
 	"github.com/reshifr/secure-env/core/crypto"
 )
 
 const (
-	RoleSecretSaltLen = 16
+	RoleSecretMaxId      = 63
+	RoleSecretSaltLen    = 16
+	RoleSecretBitmapSize = 8
+	RoleSecretBufLenSize = 8
 )
 
-type roleSecretUserKey struct {
+type RoleSecretSharedKey struct {
+	salt []byte
 	buf  crypto.CipherBuf
-	salt [RoleSecretSaltLen]byte
 }
 
 type RoleSecret[
 	KDF crypto.KDF,
 	CSPRNG crypto.CSPRNG,
 	Cipher crypto.Cipher] struct {
-	kdf      KDF
-	csprng   CSPRNG
-	cipher   Cipher
-	bitmap   uint64
-	iv       crypto.CipherIV
-	key      []byte
-	userKeys map[int8]roleSecretUserKey
+	kdf        KDF
+	csprng     CSPRNG
+	cipher     Cipher
+	bitmap     uint64
+	mainIV     crypto.CipherIV
+	mainKey    []byte
+	sharedKeys *avl.Tree[int8, RoleSecretSharedKey]
 }
 
 func MakeRoleSecret[
@@ -32,88 +39,181 @@ func MakeRoleSecret[
 	Cipher crypto.Cipher](
 	kdf KDF,
 	csprng CSPRNG,
-	cipher Cipher,
-	roleIV crypto.CipherIV) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
+	cipher Cipher) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
 	key, err := csprng.Block(int(cipher.KeyLen()))
 	if err != nil {
-		return nil, crypto.ErrReadEntropyFailed
+		return nil, err
 	}
-	sec := &RoleSecret[KDF, CSPRNG, Cipher]{
-		kdf:      kdf,
-		csprng:   csprng,
-		cipher:   cipher,
-		iv:       roleIV,
-		key:      key,
-		userKeys: make(map[int8]roleSecretUserKey),
+	rawIV, err := csprng.Block(int(cipher.IVLen()))
+	if err != nil {
+		return nil, err
 	}
-	return sec, nil
+	iv, _ := cipher.LoadIV(rawIV)
+	secret := &RoleSecret[KDF, CSPRNG, Cipher]{
+		kdf:        kdf,
+		csprng:     csprng,
+		cipher:     cipher,
+		mainIV:     iv,
+		mainKey:    key,
+		sharedKeys: avl.New[int8, RoleSecretSharedKey](),
+	}
+	return secret, nil
 }
 
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) userId() int8 {
-	i := int8(0)
-	n := ^sec.bitmap
-	if n >= 0x0000000100000000 {
-		i += 32
-		n >>= 32
+func LoadRoleSecret[
+	KDF crypto.KDF,
+	CSPRNG crypto.CSPRNG,
+	Cipher crypto.Cipher](
+	kdf KDF,
+	csprng CSPRNG,
+	cipher Cipher,
+	raw []byte,
+	id int,
+	passphrase string) (*RoleSecret[KDF, CSPRNG, Cipher], error) {
+	if id < 0 || id > RoleSecretMaxId {
+		return nil, crypto.ErrInvalidSecretId
 	}
-	if n >= 0x0000000000010000 {
-		i += 16
-		n >>= 16
+	ivLen := int(cipher.IVLen())
+	mainBlockLen := RoleSecretBitmapSize + RoleSecretBufLenSize + ivLen
+	if len(raw) < mainBlockLen {
+		return nil, crypto.ErrInvalidBufferLayout
 	}
-	if n >= 0x0000000000000100 {
-		i += 8
-		n >>= 8
+	i := 0
+	bitmap := binary.BigEndian.Uint64(raw[i:])
+	i += RoleSecretBitmapSize
+	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
+	i += RoleSecretBufLenSize
+	rawIV := raw[i : i+ivLen]
+	i += ivLen
+
+	n := bits.OnesCount64(bitmap)
+	sharedKeyLen := bufLen + RoleSecretSaltLen
+	sharedBlockLen := sharedKeyLen * n
+	if len(raw[i:]) != sharedBlockLen {
+		return nil, crypto.ErrInvalidBufferLayout
 	}
-	if n >= 0x0000000000000010 {
-		i += 4
-		n >>= 4
+
+	order := bitmap << (RoleSecretMaxId - id)
+	if order == 0 {
+		return nil, crypto.ErrInvalidSecretId
 	}
-	if n >= 0x0000000000000004 {
-		i += 2
-		n >>= 2
+	pBuf := bits.OnesCount64(order) - 1
+	iBuf := i + pBuf*sharedKeyLen
+	salt := raw[iBuf : iBuf+RoleSecretSaltLen]
+	iBuf += RoleSecretSaltLen
+	buf, _ := cipher.LoadBuf(raw[iBuf : iBuf+bufLen])
+	key := kdf.Key(passphrase, salt, cipher.KeyLen())
+	mainKey, err := cipher.Decrypt(key, buf)
+	if err != nil {
+		return nil, err
 	}
-	if n >= 0x0000000000000002 {
-		i += 1
-		n >>= 1
+
+	p := 0
+	it := bitmap
+	sharedKeys := avl.New[int8, RoleSecretSharedKey]()
+	for ; it != 0; p++ {
+		if p == pBuf {
+			sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+			sharedKeys.Put(int8(id), sharedKey)
+			i += sharedKeyLen
+			continue
+		}
+		salt := raw[i : i+RoleSecretSaltLen]
+		i += RoleSecretSaltLen
+		buf, _ := cipher.LoadBuf(raw[i : i+bufLen])
+		i += bufLen
+		sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+		bufId := bits.TrailingZeros64(it)
+		sharedKeys.Put(int8(bufId), sharedKey)
+		it &= it - 1
 	}
-	sec.bitmap |= 1 << i
-	return i
+
+	iv, _ := cipher.LoadIV(rawIV)
+	secret := &RoleSecret[KDF, CSPRNG, Cipher]{
+		kdf:        kdf,
+		csprng:     csprng,
+		cipher:     cipher,
+		mainIV:     iv,
+		mainKey:    mainKey,
+		sharedKeys: sharedKeys,
+	}
+	return secret, nil
 }
 
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Add(
-	userIV crypto.CipherIV, passphrase string) (int8, error) {
-	if ^sec.bitmap == 0 {
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
+	iv crypto.CipherIV, passphrase string) (int, error) {
+	if secret.bitmap == 0xffffffffffffffff {
 		return -1, crypto.ErrSharingExceedsLimit
 	}
-	salt := [RoleSecretSaltLen]byte{}
-	if err := sec.csprng.Read(salt[:]); err != nil {
-		return -1, err
-	}
-	userKey := sec.kdf.Key(passphrase, salt[:], sec.cipher.KeyLen())
-	buf, err := sec.cipher.Seal(userIV, userKey, sec.key)
+	salt, err := secret.csprng.Block(RoleSecretSaltLen)
 	if err != nil {
 		return -1, err
 	}
-	id := sec.userId()
-	sec.userKeys[id] = roleSecretUserKey{buf: buf, salt: salt}
+	key := secret.kdf.Key(passphrase, salt[:], secret.cipher.KeyLen())
+	buf, err := secret.cipher.Encrypt(iv, key, secret.mainKey)
+	if err != nil {
+		return -1, err
+	}
+	id := bits.TrailingZeros64(^secret.bitmap)
+	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+	secret.bitmap |= 1 << id
+	secret.sharedKeys.Put(int8(id), sharedKey)
 	return id, nil
 }
 
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Find(userId int8) bool {
-	return (sec.bitmap & (1 << userId)) != 0
+// func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Find(userId int8) bool {
+// 	return (secret.bitmap & (1 << userId)) != 0
+// }
+
+// func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Del(userId int8) {
+// 	delete(secret.userKeys, userId)
+// 	secret.bitmap &= ^(1 << userId)
+// }
+
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Encrypt(
+	plaintext []byte) crypto.CipherBuf {
+	buf, _ := secret.cipher.Encrypt(secret.mainIV, secret.mainKey, plaintext)
+	return buf
 }
 
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Del(userId int8) {
-	delete(sec.userKeys, userId)
-	sec.bitmap &= ^(1 << userId)
-}
-
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Seal(
-	plaintext []byte) (crypto.CipherBuf, error) {
-	return sec.cipher.Seal(sec.iv, sec.key, plaintext)
-}
-
-func (sec *RoleSecret[KDF, CSPRNG, Cipher]) Open(
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Decrypt(
 	buf crypto.CipherBuf) ([]byte, error) {
-	return sec.cipher.Open(sec.key, buf)
+	return secret.cipher.Decrypt(secret.mainKey, buf)
+}
+
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
+	n := secret.sharedKeys.Size()
+	if n == 0 {
+		return nil
+	}
+	bufLen := 0
+	allBufLen := 0
+	allSaltLen := 0
+	ivLen := int(secret.cipher.IVLen())
+	it := secret.sharedKeys.Iterator()
+	if it.Begin(); it.Next() {
+		sharedKey := it.Value()
+		bufLen = int(sharedKey.buf.Len())
+		allBufLen += bufLen * n
+		allSaltLen += RoleSecretSaltLen * n
+	}
+	rawLen := RoleSecretBitmapSize + ivLen +
+		RoleSecretBufLenSize + allSaltLen + allBufLen
+	raw := make([]byte, rawLen)
+
+	i := 0
+	binary.BigEndian.PutUint64(raw[i:], secret.bitmap)
+	i += RoleSecretBitmapSize
+	binary.BigEndian.PutUint64(raw[i:], uint64(bufLen))
+	i += RoleSecretBufLenSize
+	copy(raw[i:], secret.mainIV.Raw())
+	i += ivLen
+	for it.Begin(); it.Next(); {
+		sharedKey := it.Value()
+		copy(raw[i:], sharedKey.salt[:])
+		i += RoleSecretSaltLen
+		copy(raw[i:], sharedKey.buf.Raw())
+		i += bufLen
+	}
+	return raw
 }

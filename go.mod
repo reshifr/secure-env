@@ -3,6 +3,7 @@ module github.com/reshifr/secure-env
 go 1.22.0
 
 require (
+	github.com/emirpasic/gods/v2 v2.0.0-alpha
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.21.0
 )

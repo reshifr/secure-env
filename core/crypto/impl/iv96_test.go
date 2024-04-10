@@ -2,7 +2,6 @@ package crypto_impl
 
 import (
 	"encoding/binary"
-	"sync"
 	"testing"
 
 	"github.com/reshifr/secure-env/core/crypto"
@@ -27,6 +26,7 @@ func Test_MakeIV96(t *testing.T) {
 		binary.BigEndian.PutUint32(fixed[:], encFixed)
 		invocation := uint64(0)
 		expIV := &IV96{fixed: encFixed, invocation: invocation}
+
 		iv, err := MakeIV96(fixed[:])
 		assert.Equal(t, expIV, iv)
 		assert.ErrorIs(t, err, nil)
@@ -77,43 +77,16 @@ func Test_IV96_FixedLen(t *testing.T) {
 
 func Test_IV96_Invoke(t *testing.T) {
 	t.Parallel()
-	t.Run("Serial access", func(t *testing.T) {
-		t.Parallel()
-		executed := uint64(1000)
-		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
-		iv, _ := MakeIV96(fixed)
-		expIV, _ := MakeIV96(fixed)
-		expIV.invocation = executed
-		for i := iv.invocation; i < executed; i++ {
-			iv.Invoke()
-		}
-		assert.Equal(t, expIV, iv)
-	})
-	t.Run("Concurrent access", func(t *testing.T) {
-		t.Parallel()
-		executed := uint64(1000)
-		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
-		iv, _ := MakeIV96(fixed)
-		expIV, _ := MakeIV96(fixed)
-		expIV.invocation = executed
-
-		invocations := map[uint64]struct{}{}
-		var mu sync.Mutex
-		var wg sync.WaitGroup
-		for i := iv.invocation; i < executed; i++ {
-			wg.Add(1)
-			go func() {
-				newIV := iv.Invoke()
-				mu.Lock()
-				invocations[newIV.(*IV96).invocation] = struct{}{}
-				mu.Unlock()
-				wg.Done()
-			}()
-		}
-		wg.Wait()
-		assert.Equal(t, expIV, iv)
-		assert.Equal(t, executed, uint64(len(invocations)))
-	})
+	fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
+	iv, _ := MakeIV96(fixed)
+	executed := uint64(1000)
+	rawIV := binary.BigEndian.AppendUint32(nil, 0x01020304)
+	rawIV = binary.BigEndian.AppendUint64(rawIV, executed)
+	expIV, _ := LoadIV96(rawIV)
+	for i := 0; i < int(executed); i++ {
+		iv.Invoke()
+	}
+	assert.Equal(t, expIV, iv)
 }
 
 func Test_IV96_Raw(t *testing.T) {

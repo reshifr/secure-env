@@ -17,100 +17,6 @@ func (_m *CipherBuf) EXPECT() *CipherBuf_Expecter {
 	return &CipherBuf_Expecter{mock: &_m.Mock}
 }
 
-// Add provides a mock function with given fields:
-func (_m *CipherBuf) Add() []byte {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for Add")
-	}
-
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func() []byte); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	return r0
-}
-
-// CipherBuf_Add_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Add'
-type CipherBuf_Add_Call struct {
-	*mock.Call
-}
-
-// Add is a helper method to define mock.On call
-func (_e *CipherBuf_Expecter) Add() *CipherBuf_Add_Call {
-	return &CipherBuf_Add_Call{Call: _e.mock.On("Add")}
-}
-
-func (_c *CipherBuf_Add_Call) Run(run func()) *CipherBuf_Add_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *CipherBuf_Add_Call) Return(add []byte) *CipherBuf_Add_Call {
-	_c.Call.Return(add)
-	return _c
-}
-
-func (_c *CipherBuf_Add_Call) RunAndReturn(run func() []byte) *CipherBuf_Add_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Block provides a mock function with given fields:
-func (_m *CipherBuf) Block() []byte {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for Block")
-	}
-
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func() []byte); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	return r0
-}
-
-// CipherBuf_Block_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Block'
-type CipherBuf_Block_Call struct {
-	*mock.Call
-}
-
-// Block is a helper method to define mock.On call
-func (_e *CipherBuf_Expecter) Block() *CipherBuf_Block_Call {
-	return &CipherBuf_Block_Call{Call: _e.mock.On("Block")}
-}
-
-func (_c *CipherBuf_Block_Call) Run(run func()) *CipherBuf_Block_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *CipherBuf_Block_Call) Return(block []byte) *CipherBuf_Block_Call {
-	_c.Call.Return(block)
-	return _c
-}
-
-func (_c *CipherBuf_Block_Call) RunAndReturn(run func() []byte) *CipherBuf_Block_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // Ciphertext provides a mock function with given fields:
 func (_m *CipherBuf) Ciphertext() []byte {
 	ret := _m.Called()
@@ -154,6 +60,98 @@ func (_c *CipherBuf_Ciphertext_Call) Return(ciphertext []byte) *CipherBuf_Cipher
 }
 
 func (_c *CipherBuf_Ciphertext_Call) RunAndReturn(run func() []byte) *CipherBuf_Ciphertext_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Len provides a mock function with given fields:
+func (_m *CipherBuf) Len() uint64 {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Len")
+	}
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func() uint64); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	return r0
+}
+
+// CipherBuf_Len_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Len'
+type CipherBuf_Len_Call struct {
+	*mock.Call
+}
+
+// Len is a helper method to define mock.On call
+func (_e *CipherBuf_Expecter) Len() *CipherBuf_Len_Call {
+	return &CipherBuf_Len_Call{Call: _e.mock.On("Len")}
+}
+
+func (_c *CipherBuf_Len_Call) Run(run func()) *CipherBuf_Len_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *CipherBuf_Len_Call) Return(bufLen uint64) *CipherBuf_Len_Call {
+	_c.Call.Return(bufLen)
+	return _c
+}
+
+func (_c *CipherBuf_Len_Call) RunAndReturn(run func() uint64) *CipherBuf_Len_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Raw provides a mock function with given fields:
+func (_m *CipherBuf) Raw() []byte {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Raw")
+	}
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func() []byte); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	return r0
+}
+
+// CipherBuf_Raw_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Raw'
+type CipherBuf_Raw_Call struct {
+	*mock.Call
+}
+
+// Raw is a helper method to define mock.On call
+func (_e *CipherBuf_Expecter) Raw() *CipherBuf_Raw_Call {
+	return &CipherBuf_Raw_Call{Call: _e.mock.On("Raw")}
+}
+
+func (_c *CipherBuf_Raw_Call) Run(run func()) *CipherBuf_Raw_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *CipherBuf_Raw_Call) Return(rawBuf []byte) *CipherBuf_Raw_Call {
+	_c.Call.Return(rawBuf)
+	return _c
+}
+
+func (_c *CipherBuf_Raw_Call) RunAndReturn(run func() []byte) *CipherBuf_Raw_Call {
 	_c.Call.Return(run)
 	return _c
 }
