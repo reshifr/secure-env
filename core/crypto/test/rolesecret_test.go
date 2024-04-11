@@ -14,8 +14,8 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
-	t.Parallel()
+func Test_RoleSecret(t *testing.T) {
+	// t.Parallel()
 	kdf := cmock.NewKDF(t)
 	kdf.EXPECT().Key(mock.Anything, mock.Anything, mock.Anything).RunAndReturn(
 		func(passphrase string, salt []byte, keyLen uint32) []byte {
@@ -37,8 +37,9 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	passphrase := "RodGY-gV7vpz6FHZ6zEKQEhl1.kKz1S,"
-	secret, _, err := cimpl.MakeRoleSecret(kdf, rng, cipher, ownerIV, passphrase)
+	ownerPassphrase := "RodGY-gV7vpz6FHZ6zEKQEhl1.kKz1S,"
+	secret, ownerId, err := cimpl.MakeRoleSecret(
+		kdf, rng, cipher, ownerIV, ownerPassphrase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,6 +73,20 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 	assert.Equal(t, msg, plaintext)
 
 	raw := secret.Raw()
+	secretLoaded, err := cimpl.LoadRoleSecret(kdf,
+		rng, cipher, raw, ownerId, ownerPassphrase)
+
+	t.Logf("secretLoaded_error=%v\n", err)
+	t.Logf("ownerId=%v\n", ownerId)
+	raw = secretLoaded.Raw()
+
+	_, err = cimpl.LoadRoleSecret(kdf,
+		rng, cipher, raw, 63, passphrases[0])
+	t.Logf("secretLoaded_error2=%v\n", err)
+
+	// raw = secretLoaded.Raw()
+	// t.Log(raw)
+
 	i := 0
 	bitmap := binary.BigEndian.Uint64(raw[i:])
 	t.Logf("Bitmap: %064b\n", bitmap)

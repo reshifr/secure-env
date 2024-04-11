@@ -2,6 +2,7 @@ package crypto_impl
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math/bits"
 
 	avl "github.com/emirpasic/gods/v2/trees/avltree"
@@ -118,7 +119,11 @@ func LoadRoleSecret[
 	}
 
 	order := bitmap << (RoleSecretMaxId - id)
-	if order == 0 {
+
+	fmt.Printf("e=%v\n", RoleSecretMaxId-id)
+	fmt.Printf("order=%064b\n", order)
+
+	if (order & 0x8000000000000000) == 0 {
 		return nil, crypto.ErrIdDoesNotExist
 	}
 	pBuf := bits.OnesCount64(order) - 1
@@ -132,13 +137,16 @@ func LoadRoleSecret[
 		return nil, err
 	}
 
-	it := bitmap
+	// it := bitmap
 	sharedKeys := avl.New[int, RoleSecretSharedKey]()
+
+	it := bitmap
 	for p := 0; it != 0; p++ {
 		if p == pBuf {
 			sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
 			sharedKeys.Put(id, sharedKey)
 			i += sharedKeyLen
+			it &= it - 1
 			continue
 		}
 		salt := raw[i : i+RoleSecretSaltLen]
@@ -156,10 +164,24 @@ func LoadRoleSecret[
 		kdf:        kdf,
 		csprng:     csprng,
 		cipher:     cipher,
+		bitmap:     bitmap,
 		mainIV:     iv,
 		mainKey:    mainKey,
 		sharedKeys: sharedKeys,
 	}
+
+	fmt.Printf("kdf=%v\n", secret.kdf)
+	fmt.Printf("csprng=%v\n", secret.csprng)
+	fmt.Printf("cipher=%v\n", secret.cipher)
+	fmt.Printf("bitmap=%064b\n", secret.bitmap)
+	fmt.Printf("mainIV=%x\n", secret.mainIV.Raw())
+	fmt.Printf("mainKey=%x\n", secret.mainKey)
+
+	skit := secret.sharedKeys.Iterator()
+	for skit.Begin(); skit.Next(); {
+		fmt.Printf("sharedKey[%v]=%x\n", skit.Key(), skit.Value().buf.Raw())
+	}
+
 	return secret, nil
 }
 
