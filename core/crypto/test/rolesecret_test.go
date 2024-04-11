@@ -45,12 +45,12 @@ func Test_RoleSecret(t *testing.T) {
 	}
 
 	passphrases := []string{
-		",zNdmrWKH1NKp.9JT5HzaW=zlD,?PMI#",
-		"lymHS7/.Zwcv-nBWjs6V3O~r@1T~fRCN",
-		",bEZhF~g.~rvYJmy+BEJEkGrw@8DKx@S",
-		"yqt_nw8g+8ktYWQ&j.clx/=YuUd~/Fpf",
-		"+ePmPAfuEGZ.JCUTvLh3m3j@=fvqFUyO",
-		"RjC=Ra?CG7qExj&/BL/refbo7QJqR_tr",
+		// ",zNdmrWKH1NKp.9JT5HzaW=zlD,?PMI#",
+		// "lymHS7/.Zwcv-nBWjs6V3O~r@1T~fRCN",
+		// ",bEZhF~g.~rvYJmy+BEJEkGrw@8DKx@S",
+		// "yqt_nw8g+8ktYWQ&j.clx/=YuUd~/Fpf",
+		// "+ePmPAfuEGZ.JCUTvLh3m3j@=fvqFUyO",
+		// "RjC=Ra?CG7qExj&/BL/refbo7QJqR_tr",
 	}
 	for _, passphrase := range passphrases {
 		memberIVFixed := [cimpl.IV96FixedLen]byte{}
@@ -76,13 +76,17 @@ func Test_RoleSecret(t *testing.T) {
 	secretLoaded, err := cimpl.LoadRoleSecret(kdf,
 		rng, cipher, raw, ownerId, ownerPassphrase)
 
+	// secretLoaded.Del(5)
+	// secretLoaded.Del(1)
+	secretLoaded.DEBUG()
+
 	t.Logf("secretLoaded_error=%v\n", err)
 	t.Logf("ownerId=%v\n", ownerId)
 	raw = secretLoaded.Raw()
 
-	_, err = cimpl.LoadRoleSecret(kdf,
-		rng, cipher, raw, 63, passphrases[0])
-	t.Logf("secretLoaded_error2=%v\n", err)
+	// _, err = cimpl.LoadRoleSecret(kdf,
+	// 	rng, cipher, raw, 5, passphrases[0])
+	// t.Logf("secretLoaded_error2=%v\n", err)
 
 	// raw = secretLoaded.Raw()
 	// t.Log(raw)
@@ -90,6 +94,7 @@ func Test_RoleSecret(t *testing.T) {
 	i := 0
 	bitmap := binary.BigEndian.Uint64(raw[i:])
 	t.Logf("Bitmap: %064b\n", bitmap)
+	t.Logf("Bitmap: %016x\n", bitmap)
 	i += cimpl.RoleSecretBitmapSize
 	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
 	t.Logf("BufLen: %v\n", bufLen)

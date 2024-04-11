@@ -98,19 +98,22 @@ func LoadRoleSecret[
 	if id < 0 || id > RoleSecretMaxId {
 		return nil, crypto.ErrInvalidSecretId
 	}
+
 	ivLen := int(cipher.IVLen())
 	mainBlockLen := RoleSecretBitmapSize + RoleSecretBufLenSize + ivLen
 	if len(raw) < mainBlockLen {
 		return nil, crypto.ErrInvalidBufferLayout
 	}
+
 	i := 0
 	bitmap := binary.BigEndian.Uint64(raw[i:])
+	if bitmap == 0 {
+		return nil, crypto.ErrInvalidBufferLayout
+	}
+
 	i += RoleSecretBitmapSize
 	bufLen := int(binary.BigEndian.Uint64(raw[i:]))
 	i += RoleSecretBufLenSize
-	rawIV := raw[i : i+ivLen]
-	i += ivLen
-
 	n := bits.OnesCount64(bitmap)
 	sharedKeyLen := bufLen + RoleSecretSaltLen
 	sharedBlockLen := sharedKeyLen * n
@@ -119,10 +122,6 @@ func LoadRoleSecret[
 	}
 
 	order := bitmap << (RoleSecretMaxId - id)
-
-	fmt.Printf("e=%v\n", RoleSecretMaxId-id)
-	fmt.Printf("order=%064b\n", order)
-
 	if (order & 0x8000000000000000) == 0 {
 		return nil, crypto.ErrIdDoesNotExist
 	}
@@ -131,16 +130,18 @@ func LoadRoleSecret[
 	salt := raw[iBuf : iBuf+RoleSecretSaltLen]
 	iBuf += RoleSecretSaltLen
 	buf, _ := cipher.LoadBuf(raw[iBuf : iBuf+bufLen])
+
 	key := kdf.Key(passphrase, salt, cipher.KeyLen())
 	mainKey, err := cipher.Decrypt(key, buf)
 	if err != nil {
 		return nil, err
 	}
 
-	// it := bitmap
-	sharedKeys := avl.New[int, RoleSecretSharedKey]()
+	rawIV := raw[i : i+ivLen]
+	i += ivLen
 
 	it := bitmap
+	sharedKeys := avl.New[int, RoleSecretSharedKey]()
 	for p := 0; it != 0; p++ {
 		if p == pBuf {
 			sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
@@ -169,7 +170,10 @@ func LoadRoleSecret[
 		mainKey:    mainKey,
 		sharedKeys: sharedKeys,
 	}
+	return secret, nil
+}
 
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) DEBUG() {
 	fmt.Printf("kdf=%v\n", secret.kdf)
 	fmt.Printf("csprng=%v\n", secret.csprng)
 	fmt.Printf("cipher=%v\n", secret.cipher)
@@ -179,20 +183,23 @@ func LoadRoleSecret[
 
 	skit := secret.sharedKeys.Iterator()
 	for skit.Begin(); skit.Next(); {
-		fmt.Printf("sharedKey[%v]=%x\n", skit.Key(), skit.Value().buf.Raw())
+		fmt.Printf(
+			"sharedKey[%v]=%x %x\n",
+			skit.Key(),
+			skit.Value().salt,
+			skit.Value().buf.Raw(),
+		)
 	}
-
-	return secret, nil
 }
 
 // func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Find(userId int) bool {
 // 	return (secret.bitmap & (1 << userId)) != 0
 // }
 
-// func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Del(userId int) {
-// 	delete(secret.userKeys, userId)
-// 	secret.bitmap &= ^(1 << userId)
-// }
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Del(id int) {
+	secret.bitmap &= ^(1 << id)
+	secret.sharedKeys.Remove(id)
+}
 
 func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Encrypt(
 	plaintext []byte) crypto.CipherBuf {
@@ -210,6 +217,7 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	if n == 0 {
 		return nil
 	}
+
 	bufLen := 0
 	allBufLen := 0
 	allSaltLen := 0
@@ -221,6 +229,7 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 		allBufLen += bufLen * n
 		allSaltLen += RoleSecretSaltLen * n
 	}
+
 	rawLen := RoleSecretBitmapSize + ivLen +
 		RoleSecretBufLenSize + allSaltLen + allBufLen
 	raw := make([]byte, rawLen)

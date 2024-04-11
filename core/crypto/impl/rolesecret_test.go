@@ -2,6 +2,7 @@ package crypto_impl
 
 import (
 	"bytes"
+	"encoding/binary"
 	"testing"
 
 	avl "github.com/emirpasic/gods/v2/trees/avltree"
@@ -17,6 +18,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 
 	passphrase := "U~mKIO5/P5oZ&VY&l,Sdwo@Qp,sjLoo2"
 	keyLen := uint32(16)
+	ivLen := uint32(8)
 
 	t.Run("Generate key ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
@@ -45,11 +47,10 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		rawIVLen := uint32(8)
-		cipher.EXPECT().IVLen().Return(rawIVLen)
+		cipher.EXPECT().IVLen().Return(ivLen)
 
 		expErr := crypto.ErrReadEntropyFailed
-		rng.EXPECT().Block(int(rawIVLen)).Return(key, expErr).Once()
+		rng.EXPECT().Block(int(ivLen)).Return(key, expErr).Once()
 
 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 		expId := -1
@@ -69,11 +70,10 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(mainKey, nil).Once()
 
-		rawIVLen := uint32(8)
-		cipher.EXPECT().IVLen().Return(rawIVLen)
+		cipher.EXPECT().IVLen().Return(ivLen)
 
-		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
-		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
+		rawIV := bytes.Repeat([]byte{0xff}, int(ivLen))
+		rng.EXPECT().Block(int(ivLen)).Return(rawIV, nil).Once()
 
 		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
 
@@ -96,7 +96,6 @@ func Test_MakeRoleSecret(t *testing.T) {
 		expSharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
 		expSharedKeys := avl.New[int, RoleSecretSharedKey]()
 		expSharedKeys.Put(expId, expSharedKey)
-
 		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
 			kdf:     kdf,
 			csprng:  rng,
@@ -118,17 +117,58 @@ func Test_MakeRoleSecret(t *testing.T) {
 
 func Test_LoadRoleSecret(t *testing.T) {
 	t.Parallel()
-	t.Run("Id range ErrInvalidSecretId error", func(t *testing.T) {
+	kdf := cmock.NewKDF(t)
+	rng := cmock.NewCSPRNG(t)
+
+	t.Run("ErrInvalidSecretId error", func(t *testing.T) {
 		t.Parallel()
-		kdf := cmock.NewKDF(t)
-		rng := cmock.NewCSPRNG(t)
 		cipher := cmock.NewCipher(t)
+
 		id := -1
 		expErr := crypto.ErrInvalidSecretId
 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+
 		secret, err := LoadRoleSecret(kdf, rng, cipher, nil, id, "")
 		assert.Equal(t, expSecret, secret)
 		assert.Equal(t, expErr, err)
+	})
+
+	id := 7
+	ivLen := uint32(8)
+	cipher := cmock.NewCipher(t)
+	cipher.EXPECT().IVLen().Return(ivLen).Twice()
+
+	t.Run("Main block len ErrInvalidBufferLayout error", func(t *testing.T) {
+		t.Parallel()
+		raw := bytes.Repeat([]byte{0xff}, 8)
+		expErr := crypto.ErrInvalidBufferLayout
+		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+
+		secret, err := LoadRoleSecret(kdf, rng, cipher, raw, id, "")
+		assert.Equal(t, expSecret, secret)
+		assert.Equal(t, expErr, err)
+	})
+	t.Run("Shared block len ErrInvalidBufferLayout error", func(t *testing.T) {
+		t.Parallel()
+		bitmap := uint64(0x0000000000000001)
+		bufLen := uint64(64)
+		rawIV := bytes.Repeat([]byte{0xff}, int(ivLen))
+		sharedBlock := bytes.Repeat([]byte{0xff}, 8)
+		raw := append(binary.BigEndian.AppendUint64(nil, bitmap),
+			binary.BigEndian.AppendUint64(nil, bufLen)...)
+		raw = append(raw, rawIV...)
+		raw = append(raw, sharedBlock...)
+
+		expErr := crypto.ErrInvalidBufferLayout
+		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+
+		secret, err := LoadRoleSecret(kdf, rng, cipher, raw, id, "")
+		assert.Equal(t, expSecret, secret)
+		assert.Equal(t, expErr, err)
+	})
+
+	t.Run("", func(t *testing.T) {
+		
 	})
 }
 
