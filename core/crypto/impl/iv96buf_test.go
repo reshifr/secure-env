@@ -10,10 +10,10 @@ import (
 
 func Test_MakeIV96Buf(t *testing.T) {
 	t.Parallel()
+	ciphertext := bytes.Repeat([]byte{0xbb}, 8)
 	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
 		t.Parallel()
 		rawIV := bytes.Repeat([]byte{0xaa}, 8)
-		ciphertext := bytes.Repeat([]byte{0xbb}, 8)
 		var expBuf *IV96Buf = nil
 		expErr := crypto.ErrInvalidRawIVLen
 		buf, err := MakeIV96Buf(rawIV, ciphertext)
@@ -23,7 +23,6 @@ func Test_MakeIV96Buf(t *testing.T) {
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
 		rawIV := bytes.Repeat([]byte{0xaa}, IV96Len)
-		ciphertext := bytes.Repeat([]byte{0xbb}, 8)
 		expBuf := &IV96Buf{rawIV: rawIV, ciphertext: ciphertext}
 		buf, err := MakeIV96Buf(rawIV, ciphertext)
 		assert.Equal(t, expBuf, buf)

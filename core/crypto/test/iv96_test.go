@@ -12,9 +12,9 @@ import (
 
 func Test_IV96_Invoke(t *testing.T) {
 	t.Parallel()
+	executed := uint64(1000)
 	t.Run("Concurrent access", func(t *testing.T) {
 		t.Parallel()
-		executed := uint64(1000)
 		fixed := binary.BigEndian.AppendUint32(nil, 0x01020304)
 		rawIV := bytes.Clone(fixed)
 		rawIV = binary.BigEndian.AppendUint64(rawIV, executed)
@@ -42,7 +42,6 @@ func Test_IV96_Invoke(t *testing.T) {
 	})
 	t.Run("Invocation overflow", func(t *testing.T) {
 		t.Parallel()
-		executed := uint64(1000)
 		rawIV := [cimpl.IV96Len]byte{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 			0xff, 0xff, 0xff, 0x00,

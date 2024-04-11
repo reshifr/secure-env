@@ -37,16 +37,31 @@ func Test_ChaCha20Poly1305AE_KeyLen(t *testing.T) {
 
 func Test_ChaCha20Poly1305AE_MakeIV(t *testing.T) {
 	t.Parallel()
-	fixed := [IV96FixedLen]byte{}
+	fixed := make([]byte, IV96FixedLen)
 	cipher := ChaCha20Poly1305AE{}
-	cipher.MakeIV(fixed[:])
+	cipher.MakeIV(fixed)
 }
 
 func Test_ChaCha20Poly1305AE_LoadIV(t *testing.T) {
 	t.Parallel()
-	rawIV := [IV96Len]byte{}
+	rawIV := make([]byte, IV96Len)
 	cipher := ChaCha20Poly1305AE{}
-	cipher.LoadIV(rawIV[:])
+	cipher.LoadIV(rawIV)
+}
+
+func Test_ChaCha20Poly1305AE_MakeBuf(t *testing.T) {
+	t.Parallel()
+	rawIV := make([]byte, IV96Len)
+	ciphertext, _ := hex.DecodeString("0954115c645217e2")
+	cipher := ChaCha20Poly1305AE{}
+	cipher.MakeBuf(rawIV, ciphertext)
+}
+
+func Test_ChaCha20Poly1305AE_LoadBuf(t *testing.T) {
+	t.Parallel()
+	rawBuf, _ := hex.DecodeString("861c6c92b4cd97b487f658d0d85b445d1132f3c3")
+	cipher := ChaCha20Poly1305AE{}
+	cipher.LoadBuf(rawBuf)
 }
 
 func Test_ChaCha20Poly1305AE_Encrypt(t *testing.T) {
@@ -57,7 +72,6 @@ func Test_ChaCha20Poly1305AE_Encrypt(t *testing.T) {
 		iv.EXPECT().Len().Return(8).Once()
 		var expBuf crypto.CipherBuf = nil
 		expErr := crypto.ErrInvalidIVLen
-
 		cipher := ChaCha20Poly1305AE{}
 		buf, err := cipher.Encrypt(iv, nil, nil)
 		assert.Equal(t, expBuf, buf)
@@ -70,7 +84,6 @@ func Test_ChaCha20Poly1305AE_Encrypt(t *testing.T) {
 		key := bytes.Repeat([]byte{0xff}, 8)
 		var expBuf crypto.CipherBuf = nil
 		expErr := crypto.ErrInvalidKeyLen
-
 		cipher := ChaCha20Poly1305AE{}
 		buf, err := cipher.Encrypt(iv, key, nil)
 		assert.Equal(t, expBuf, buf)
@@ -113,7 +126,6 @@ func Test_ChaCha20Poly1305AE_Decrypt(t *testing.T) {
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		var expPlaintext []byte = nil
 		expErr := crypto.ErrInvalidRawIVLen
-
 		cipher := ChaCha20Poly1305AE{}
 		plaintext, err := cipher.Decrypt(nil, buf)
 		assert.Equal(t, expPlaintext, plaintext)
@@ -133,13 +145,13 @@ func Test_ChaCha20Poly1305AE_Decrypt(t *testing.T) {
 		assert.Equal(t, expPlaintext, plaintext)
 		assert.ErrorIs(t, err, expErr)
 	})
+
+	fixed := uint32(0x01020304)
+	invocation := uint64(1000)
+	rawIV := binary.BigEndian.AppendUint32(nil, fixed)
+	rawIV = binary.BigEndian.AppendUint64(rawIV, invocation)
 	t.Run("ErrCipherAuthFailed error", func(t *testing.T) {
 		t.Parallel()
-		fixed := uint32(0x01020304)
-		invocation := uint64(1000)
-		rawIV := binary.BigEndian.AppendUint32(nil, fixed)
-		rawIV = binary.BigEndian.AppendUint64(rawIV, invocation)
-
 		buf := cmock.NewCipherBuf(t)
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
@@ -160,11 +172,6 @@ func Test_ChaCha20Poly1305AE_Decrypt(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		fixed := uint32(0x01020304)
-		invocation := uint64(1000)
-		rawIV := binary.BigEndian.AppendUint32(nil, fixed)
-		rawIV = binary.BigEndian.AppendUint64(rawIV, invocation)
-
 		buf := cmock.NewCipherBuf(t)
 		buf.EXPECT().RawIV().Return(rawIV).Once()
 		key, _ := hex.DecodeString(
