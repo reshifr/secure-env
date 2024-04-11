@@ -95,7 +95,7 @@ func LoadRoleSecret[
 
 	order := bitmap << (RoleSecretMaxId - id)
 	if order == 0 {
-		return nil, crypto.ErrInvalidSecretId
+		return nil, crypto.ErrIdDoesNotExist
 	}
 	pBuf := bits.OnesCount64(order) - 1
 	iBuf := i + pBuf*sharedKeyLen
@@ -108,10 +108,9 @@ func LoadRoleSecret[
 		return nil, err
 	}
 
-	p := 0
 	it := bitmap
 	sharedKeys := avl.New[int8, RoleSecretSharedKey]()
-	for ; it != 0; p++ {
+	for p := 0; it != 0; p++ {
 		if p == pBuf {
 			sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
 			sharedKeys.Put(int8(id), sharedKey)

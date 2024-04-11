@@ -83,6 +83,22 @@ func Test_MakeRoleSecret(t *testing.T) {
 	})
 }
 
+func Test_LoadRoleSecret(t *testing.T) {
+	t.Parallel()
+	t.Run("Id range ErrInvalidSecretId error", func(t *testing.T) {
+		t.Parallel()
+		kdf := cmock.NewKDF(t)
+		rng := cmock.NewCSPRNG(t)
+		cipher := cmock.NewCipher(t)
+		id := -1
+		expErr := crypto.ErrInvalidSecretId
+		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+		secret, err := LoadRoleSecret(kdf, rng, cipher, nil, id, "")
+		assert.Equal(t, expSecret, secret)
+		assert.Equal(t, expErr, err)
+	})
+}
+
 // func Test_RoleSecret_Add(t *testing.T) {
 // 	t.Parallel()
 // 	t.Run("ErrSharingExceedsLimit error", func(t *testing.T) {
