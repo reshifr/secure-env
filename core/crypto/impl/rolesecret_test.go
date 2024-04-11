@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	avl "github.com/emirpasic/gods/v2/trees/avltree"
 	"github.com/reshifr/secure-env/core/crypto"
 	cmock "github.com/reshifr/secure-env/core/crypto/mock"
 	"github.com/stretchr/testify/assert"
@@ -59,44 +60,60 @@ func Test_MakeRoleSecret(t *testing.T) {
 		assert.ErrorIs(t, err, expErr)
 	})
 
-	// t.Run("", func(t *testing.T) {
-	// 	t.Parallel()
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		cipher := cmock.NewCipher(t)
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
-	// 	kdf := cmock.NewKDF(t)
-	// 	rng := cmock.NewCSPRNG(t)
-	// 	cipher := cmock.NewCipher(t)
-	// })
-	// 	t.Run("Succeed", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		kdf := cmock.NewKDF(t)
-	// 		rng := cmock.NewCSPRNG(t)
-	// 		cipher := cmock.NewCipher(t)
+		mainKey := bytes.Repeat([]byte{0xff}, int(keyLen))
+		rng := cmock.NewCSPRNG(t)
+		rng.EXPECT().Block(int(keyLen)).Return(mainKey, nil).Once()
 
-	// 		keyLen := uint32(8)
-	// 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
-	// 		key := bytes.Repeat([]byte{0xff}, int(keyLen))
-	// 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
+		rawIVLen := uint32(8)
+		cipher.EXPECT().IVLen().Return(rawIVLen)
 
-	// 		rawIVLen := uint32(8)
-	// 		cipher.EXPECT().IVLen().Return(rawIVLen)
-	// 		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
-	// 		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
-	// 		iv := cmock.NewCipherIV(t)
-	// 		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
-	// 		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
-	// 			kdf:        kdf,
-	// 			csprng:     rng,
-	// 			cipher:     cipher,
-	// 			mainIV:     iv,
-	// 			mainKey:    key,
-	// 			sharedKeys: avl.New[int8, RoleSecretSharedKey](),
-	// 		}
+		rawIV := bytes.Repeat([]byte{0xff}, int(rawIVLen))
+		rng.EXPECT().Block(int(rawIVLen)).Return(rawIV, nil).Once()
 
-	//		secret, err := MakeRoleSecret(kdf, rng, cipher)
-	//		secret.sharedKeys, expSecret.sharedKeys = nil, nil
-	//		assert.Equal(t, secret, expSecret)
-	//		assert.ErrorIs(t, err, nil)
-	//	})
+		cipher.EXPECT().LoadIV(rawIV).Return(iv, nil).Once()
+
+		// Add()
+		salt := bytes.Repeat([]byte{0xff}, RoleSecretSaltLen)
+		rng.EXPECT().Block(RoleSecretSaltLen).Return(salt, nil).Once()
+
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
+
+		key := bytes.Repeat([]byte{0xff}, int(keyLen))
+		kdf := cmock.NewKDF(t)
+		kdf.EXPECT().Key(passphrase, salt, keyLen).Return(key).Once()
+
+		buf := cmock.NewCipherBuf(t)
+		cipher.EXPECT().Encrypt(iv, key, mainKey).Return(buf, nil).Once()
+
+		bitmap := uint64(0x0000000000000001)
+
+		expId := 0
+		expSharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+		expSharedKeys := avl.New[int, RoleSecretSharedKey]()
+		expSharedKeys.Put(expId, expSharedKey)
+
+		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
+			kdf:     kdf,
+			csprng:  rng,
+			cipher:  cipher,
+			bitmap:  bitmap,
+			mainIV:  iv,
+			mainKey: key,
+		}
+
+		secret, id, err := MakeRoleSecret(kdf, rng, cipher, iv, passphrase)
+		assert.Equal(t, expSharedKeys.Keys(), secret.sharedKeys.Keys())
+		assert.Equal(t, expSharedKeys.Values(), secret.sharedKeys.Values())
+		secret.sharedKeys = nil
+		assert.Equal(t, expSecret, secret)
+		assert.Equal(t, expId, id)
+		assert.ErrorIs(t, err, nil)
+	})
 }
 
 func Test_LoadRoleSecret(t *testing.T) {

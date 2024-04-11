@@ -63,6 +63,27 @@ func MakeRoleSecret[
 	return secret, id, err
 }
 
+func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
+	iv crypto.CipherIV, passphrase string) (int, error) {
+	if secret.bitmap == 0xffffffffffffffff {
+		return -1, crypto.ErrSharingExceedsLimit
+	}
+	salt, err := secret.csprng.Block(RoleSecretSaltLen)
+	if err != nil {
+		return -1, err
+	}
+	key := secret.kdf.Key(passphrase, salt, secret.cipher.KeyLen())
+	buf, err := secret.cipher.Encrypt(iv, key, secret.mainKey)
+	if err != nil {
+		return -1, err
+	}
+	id := bits.TrailingZeros64(^secret.bitmap)
+	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+	secret.bitmap |= 1 << id
+	secret.sharedKeys.Put(id, sharedKey)
+	return id, nil
+}
+
 func LoadRoleSecret[
 	KDF crypto.KDF,
 	CSPRNG crypto.CSPRNG,
@@ -140,27 +161,6 @@ func LoadRoleSecret[
 		sharedKeys: sharedKeys,
 	}
 	return secret, nil
-}
-
-func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
-	iv crypto.CipherIV, passphrase string) (int, error) {
-	if secret.bitmap == 0xffffffffffffffff {
-		return -1, crypto.ErrSharingExceedsLimit
-	}
-	salt, err := secret.csprng.Block(RoleSecretSaltLen)
-	if err != nil {
-		return -1, err
-	}
-	key := secret.kdf.Key(passphrase, salt, secret.cipher.KeyLen())
-	buf, err := secret.cipher.Encrypt(iv, key, secret.mainKey)
-	if err != nil {
-		return -1, err
-	}
-	id := bits.TrailingZeros64(^secret.bitmap)
-	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
-	secret.bitmap |= 1 << id
-	secret.sharedKeys.Put(id, sharedKey)
-	return id, nil
 }
 
 // func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Find(userId int) bool {
