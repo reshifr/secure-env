@@ -50,6 +50,8 @@ type Cipher interface {
 	KeyLen() (keyLen uint32)
 	MakeIV(fixed []byte) (iv CipherIV, err error)
 	LoadIV(rawIV []byte) (iv CipherIV, err error)
+	MakeBuf(rawIV []byte, ciphertext []byte) (buf CipherBuf, err error)
+	LoadBuf(rawBuf []byte) (buf CipherBuf, err error)
 	Encrypt(iv CipherIV, key []byte, plaintext []byte) (buf CipherBuf, err error)
 	Decrypt(key []byte, buf CipherBuf) (plaintext []byte, err error)
 }

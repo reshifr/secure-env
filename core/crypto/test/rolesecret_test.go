@@ -60,10 +60,7 @@ func Test_RoleSecret_Make_Encrypt_Decrypt(t *testing.T) {
 	}
 
 	msg := []byte("Hello, World!")
-	buf, err := secret.Encrypt(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	buf := secret.Encrypt(msg)
 	plaintext, err := secret.Decrypt(buf)
 	if err != nil {
 		t.Fatal(err)

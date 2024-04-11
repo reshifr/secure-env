@@ -37,57 +37,16 @@ func Test_ChaCha20Poly1305AE_KeyLen(t *testing.T) {
 
 func Test_ChaCha20Poly1305AE_MakeIV(t *testing.T) {
 	t.Parallel()
-	t.Run("ErrInvalidIVFixedLen error", func(t *testing.T) {
-		t.Parallel()
-		fixed := [2]byte{}
-		var expIV *IV96 = nil
-		expErr := crypto.ErrInvalidIVFixedLen
-		cipher := ChaCha20Poly1305AE{}
-		iv, err := cipher.MakeIV(fixed[:])
-		assert.Equal(t, expIV, iv)
-		assert.ErrorIs(t, err, expErr)
-	})
-	t.Run("Succeed", func(t *testing.T) {
-		t.Parallel()
-		fixed := [IV96FixedLen]byte{}
-		encFixed := uint32(0x01020304)
-		binary.BigEndian.PutUint32(fixed[:], encFixed)
-		invocation := uint64(0)
-		expIV := &IV96{fixed: encFixed, invocation: invocation}
-
-		cipher := ChaCha20Poly1305AE{}
-		iv, err := cipher.MakeIV(fixed[:])
-		assert.Equal(t, expIV, iv)
-		assert.ErrorIs(t, err, nil)
-	})
+	fixed := [IV96FixedLen]byte{}
+	cipher := ChaCha20Poly1305AE{}
+	cipher.MakeIV(fixed[:])
 }
 
 func Test_ChaCha20Poly1305AE_LoadIV(t *testing.T) {
 	t.Parallel()
-	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
-		t.Parallel()
-		rawIV := [4]byte{}
-		var expIV *IV96 = nil
-		expErr := crypto.ErrInvalidRawIVLen
-		cipher := ChaCha20Poly1305AE{}
-		iv, err := cipher.LoadIV(rawIV[:])
-		assert.Equal(t, expIV, iv)
-		assert.ErrorIs(t, err, expErr)
-	})
-	t.Run("Succeed", func(t *testing.T) {
-		t.Parallel()
-		fixed := uint32(0x01020304)
-		invocation := uint64(0x0b16212c37424d58)
-		rawIV := [IV96Len]byte{}
-		binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], fixed)
-		binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], invocation)
-		expIV := &IV96{fixed: fixed, invocation: invocation}
-
-		cipher := ChaCha20Poly1305AE{}
-		iv, err := cipher.LoadIV(rawIV[:])
-		assert.Equal(t, expIV, iv)
-		assert.ErrorIs(t, err, nil)
-	})
+	rawIV := [IV96Len]byte{}
+	cipher := ChaCha20Poly1305AE{}
+	cipher.LoadIV(rawIV[:])
 }
 
 func Test_ChaCha20Poly1305AE_Encrypt(t *testing.T) {

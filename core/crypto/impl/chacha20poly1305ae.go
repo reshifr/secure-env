@@ -31,6 +31,15 @@ func (ChaCha20Poly1305AE) LoadIV(rawIV []byte) (crypto.CipherIV, error) {
 	return LoadIV96(rawIV)
 }
 
+func (ChaCha20Poly1305AE) MakeBuf(rawIV []byte,
+	ciphertext []byte) (crypto.CipherBuf, error) {
+	return MakeIV96Buf(rawIV, ciphertext)
+}
+
+func (ChaCha20Poly1305AE) LoadBuf(rawBuf []byte) (crypto.CipherBuf, error) {
+	return LoadIV96Buf(rawBuf)
+}
+
 func (ChaCha20Poly1305AE) Encrypt(iv crypto.CipherIV,
 	key []byte, plaintext []byte) (crypto.CipherBuf, error) {
 	if iv.Len() != IV96Len {

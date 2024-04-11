@@ -274,6 +274,64 @@ func (_c *Cipher_KeyLen_Call) RunAndReturn(run func() uint32) *Cipher_KeyLen_Cal
 	return _c
 }
 
+// LoadBuf provides a mock function with given fields: rawBuf
+func (_m *Cipher) LoadBuf(rawBuf []byte) (crypto.CipherBuf, error) {
+	ret := _m.Called(rawBuf)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LoadBuf")
+	}
+
+	var r0 crypto.CipherBuf
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]byte) (crypto.CipherBuf, error)); ok {
+		return rf(rawBuf)
+	}
+	if rf, ok := ret.Get(0).(func([]byte) crypto.CipherBuf); ok {
+		r0 = rf(rawBuf)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crypto.CipherBuf)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]byte) error); ok {
+		r1 = rf(rawBuf)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_LoadBuf_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LoadBuf'
+type Cipher_LoadBuf_Call struct {
+	*mock.Call
+}
+
+// LoadBuf is a helper method to define mock.On call
+//   - rawBuf []byte
+func (_e *Cipher_Expecter) LoadBuf(rawBuf interface{}) *Cipher_LoadBuf_Call {
+	return &Cipher_LoadBuf_Call{Call: _e.mock.On("LoadBuf", rawBuf)}
+}
+
+func (_c *Cipher_LoadBuf_Call) Run(run func(rawBuf []byte)) *Cipher_LoadBuf_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte))
+	})
+	return _c
+}
+
+func (_c *Cipher_LoadBuf_Call) Return(buf crypto.CipherBuf, err error) *Cipher_LoadBuf_Call {
+	_c.Call.Return(buf, err)
+	return _c
+}
+
+func (_c *Cipher_LoadBuf_Call) RunAndReturn(run func([]byte) (crypto.CipherBuf, error)) *Cipher_LoadBuf_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // LoadIV provides a mock function with given fields: rawIV
 func (_m *Cipher) LoadIV(rawIV []byte) (crypto.CipherIV, error) {
 	ret := _m.Called(rawIV)
@@ -328,6 +386,65 @@ func (_c *Cipher_LoadIV_Call) Return(iv crypto.CipherIV, err error) *Cipher_Load
 }
 
 func (_c *Cipher_LoadIV_Call) RunAndReturn(run func([]byte) (crypto.CipherIV, error)) *Cipher_LoadIV_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// MakeBuf provides a mock function with given fields: rawIV, ciphertext
+func (_m *Cipher) MakeBuf(rawIV []byte, ciphertext []byte) (crypto.CipherBuf, error) {
+	ret := _m.Called(rawIV, ciphertext)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MakeBuf")
+	}
+
+	var r0 crypto.CipherBuf
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]byte, []byte) (crypto.CipherBuf, error)); ok {
+		return rf(rawIV, ciphertext)
+	}
+	if rf, ok := ret.Get(0).(func([]byte, []byte) crypto.CipherBuf); ok {
+		r0 = rf(rawIV, ciphertext)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(crypto.CipherBuf)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]byte, []byte) error); ok {
+		r1 = rf(rawIV, ciphertext)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Cipher_MakeBuf_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'MakeBuf'
+type Cipher_MakeBuf_Call struct {
+	*mock.Call
+}
+
+// MakeBuf is a helper method to define mock.On call
+//   - rawIV []byte
+//   - ciphertext []byte
+func (_e *Cipher_Expecter) MakeBuf(rawIV interface{}, ciphertext interface{}) *Cipher_MakeBuf_Call {
+	return &Cipher_MakeBuf_Call{Call: _e.mock.On("MakeBuf", rawIV, ciphertext)}
+}
+
+func (_c *Cipher_MakeBuf_Call) Run(run func(rawIV []byte, ciphertext []byte)) *Cipher_MakeBuf_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].([]byte), args[1].([]byte))
+	})
+	return _c
+}
+
+func (_c *Cipher_MakeBuf_Call) Return(buf crypto.CipherBuf, err error) *Cipher_MakeBuf_Call {
+	_c.Call.Return(buf, err)
+	return _c
+}
+
+func (_c *Cipher_MakeBuf_Call) RunAndReturn(run func([]byte, []byte) (crypto.CipherBuf, error)) *Cipher_MakeBuf_Call {
 	_c.Call.Return(run)
 	return _c
 }
