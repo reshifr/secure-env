@@ -98,13 +98,11 @@ func LoadRoleSecret[
 	if id < 0 || id > RoleSecretMaxId {
 		return nil, crypto.ErrInvalidSecretId
 	}
-
 	ivLen := int(cipher.IVLen())
 	mainBlockLen := RoleSecretBitmapSize + RoleSecretBufLenSize + ivLen
 	if len(raw) < mainBlockLen {
 		return nil, crypto.ErrInvalidBufferLayout
 	}
-
 	i := 0
 	bitmap := binary.BigEndian.Uint64(raw[i:])
 	if bitmap == 0 {
@@ -137,10 +135,9 @@ func LoadRoleSecret[
 		return nil, err
 	}
 
+	it := bitmap
 	rawIV := raw[i : i+ivLen]
 	i += ivLen
-
-	it := bitmap
 	sharedKeys := avl.New[int, RoleSecretSharedKey]()
 	for p := 0; it != 0; p++ {
 		if p == pBuf {
@@ -217,7 +214,6 @@ func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Raw() []byte {
 	if n == 0 {
 		return nil
 	}
-
 	bufLen := 0
 	allBufLen := 0
 	allSaltLen := 0

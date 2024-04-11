@@ -54,8 +54,8 @@ func (iv *IV96) Invoke() crypto.CipherIV {
 }
 
 func (iv *IV96) Raw() []byte {
-	rawIV := make([]byte, IV96Len)
-	binary.BigEndian.PutUint32(rawIV[:IV96FixedLen], iv.fixed)
-	binary.BigEndian.PutUint64(rawIV[IV96FixedLen:IV96Len], iv.invocation)
-	return rawIV
+	raw := make([]byte, IV96Len)
+	binary.BigEndian.PutUint32(raw[:IV96FixedLen], iv.fixed)
+	binary.BigEndian.PutUint64(raw[IV96FixedLen:IV96Len], iv.invocation)
+	return raw
 }
