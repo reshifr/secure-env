@@ -9,27 +9,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_ChaCha20Poly1305AE_Encrypt(t *testing.T) {
+func Test_ChaChaPolyAE_Open(t *testing.T) {
 	t.Parallel()
 	t.Run("The same plaintext yields the same buf len", func(t *testing.T) {
 		t.Parallel()
 		fnRNG := c.FnCSPRNG{Read: rand.Read}
 		rng := cimpl.NewAutoRNG(fnRNG)
-		cipher := cimpl.ChaCha20Poly1305AE{}
+
+		cipher := cimpl.ChaChaPolyAE{}
 		plaintext := []byte("Hello, World!")
 
-		rawIV := [cimpl.IV96Len]byte{}
+		rawIV := [cimpl.GlobalIV96Len]byte{}
 		rng.Read(rawIV[:])
-		baseIV, _ := cimpl.LoadIV96(rawIV[:])
-		baseKey, _ := rng.Block(cimpl.ChaCha20Poly1305AEKeyLen)
-		baseBuf, _ := cipher.Encrypt(baseIV, baseKey, plaintext)
+		iv, _ := cimpl.LoadGlobalIV96(rawIV[:])
+		baseKey, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
+		baseBuf, _ := cipher.Seal(iv, baseKey, plaintext)
 
-		n := 1000
-		for i := 0; i < n; i++ {
-			rng.Read(rawIV[:])
-			iv, _ := cimpl.LoadIV96(rawIV[:])
-			key, _ := rng.Block(cimpl.ChaCha20Poly1305AEKeyLen)
-			buf, _ := cipher.Encrypt(iv, key, plaintext)
+		const executed = 1000
+		for i := 0; i < executed; i++ {
+			key, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
+			buf, _ := cipher.Seal(iv, key, plaintext)
 			assert.Equal(t, baseBuf.Len(), buf.Len())
 		}
 	})

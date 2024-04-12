@@ -12,7 +12,8 @@ import (
 func Test_NewAutoRNG(t *testing.T) {
 	t.Parallel()
 	fn := crypto.FnCSPRNG{}
-	expRNG := AutoRNG{fnCSPRNG: fn}
+	expRNG := AutoRNG{fn: fn}
+
 	rng := NewAutoRNG(fn)
 	assert.Equal(t, expRNG, rng)
 }
@@ -27,7 +28,8 @@ func Test_AutoRNG_Block(t *testing.T) {
 			},
 		}
 		var expBlock []byte = nil
-		expErr := crypto.ErrReadEntropyFailed
+		const expErr = crypto.ErrReadEntropyFailed
+
 		rng := NewAutoRNG(fn)
 		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
@@ -35,16 +37,14 @@ func Test_AutoRNG_Block(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
+		expBlock := bytes.Repeat([]byte{0xff}, 8)
 		fn := crypto.FnCSPRNG{
 			Read: func(block []byte) (n int, err error) {
-				n = len(block)
-				for i := 0; i < n; i++ {
-					block[i] = 0xff
-				}
-				return n, nil
+				copy(block, expBlock)
+				return len(block), nil
 			},
 		}
-		expBlock := bytes.Repeat([]byte{0xff}, 8)
+
 		rng := NewAutoRNG(fn)
 		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
@@ -61,31 +61,28 @@ func Test_AutoRNG_Read(t *testing.T) {
 				return 0, errors.New("")
 			},
 		}
-		expBlock := [8]byte{}
-		expErr := crypto.ErrReadEntropyFailed
+		block := make([]byte, 8)
+		expBlock := bytes.Clone(block)
+		const expErr = crypto.ErrReadEntropyFailed
 
-		block := [8]byte{}
 		rng := NewAutoRNG(fn)
-		err := rng.Read(block[:])
+		err := rng.Read(block)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
+		block := make([]byte, 8)
+		expBlock := bytes.Repeat([]byte{0xff}, 8)
 		fn := crypto.FnCSPRNG{
 			Read: func(block []byte) (int, error) {
-				n := len(block)
-				for i := 0; i < n; i++ {
-					block[i] = 0xff
-				}
-				return n, nil
+				copy(block, expBlock)
+				return len(block), nil
 			},
 		}
-		expBlock := bytes.Repeat([]byte{0xff}, 8)
 
-		block := make([]byte, 8)
 		rng := NewAutoRNG(fn)
-		err := rng.Read(block[:])
+		err := rng.Read(block)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})

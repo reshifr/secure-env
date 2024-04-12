@@ -65,18 +65,18 @@ func (_c *CipherBuf_Ciphertext_Call) RunAndReturn(run func() []byte) *CipherBuf_
 }
 
 // Len provides a mock function with given fields:
-func (_m *CipherBuf) Len() uint64 {
+func (_m *CipherBuf) Len() int {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Len")
 	}
 
-	var r0 uint64
-	if rf, ok := ret.Get(0).(func() uint64); ok {
+	var r0 int
+	if rf, ok := ret.Get(0).(func() int); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(uint64)
+		r0 = ret.Get(0).(int)
 	}
 
 	return r0
@@ -99,12 +99,12 @@ func (_c *CipherBuf_Len_Call) Run(run func()) *CipherBuf_Len_Call {
 	return _c
 }
 
-func (_c *CipherBuf_Len_Call) Return(bufLen uint64) *CipherBuf_Len_Call {
+func (_c *CipherBuf_Len_Call) Return(bufLen int) *CipherBuf_Len_Call {
 	_c.Call.Return(bufLen)
 	return _c
 }
 
-func (_c *CipherBuf_Len_Call) RunAndReturn(run func() uint64) *CipherBuf_Len_Call {
+func (_c *CipherBuf_Len_Call) RunAndReturn(run func() int) *CipherBuf_Len_Call {
 	_c.Call.Return(run)
 	return _c
 }
