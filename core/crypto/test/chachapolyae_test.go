@@ -25,8 +25,8 @@ func Test_ChaChaPolyAE_Open(t *testing.T) {
 		baseKey, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
 		baseBuf, _ := cipher.Seal(iv, baseKey, plaintext)
 
-		n := 1000
-		for i := 0; i < n; i++ {
+		const executed = 1000
+		for i := 0; i < executed; i++ {
 			key, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
 			buf, _ := cipher.Seal(iv, key, plaintext)
 			assert.Equal(t, baseBuf.Len(), buf.Len())
