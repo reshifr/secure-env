@@ -1,89 +1,80 @@
 package crypto_impl
 
-// import (
-// 	"encoding/binary"
-// 	"fmt"
-// 	"math/bits"
+import (
+	"math/bits"
 
-// 	avl "github.com/emirpasic/gods/v2/trees/avltree"
-// 	"github.com/reshifr/secure-env/core/crypto"
-// )
+	avl "github.com/emirpasic/gods/v2/trees/avltree"
+	"github.com/reshifr/secure-env/core/crypto"
+)
 
-// const (
-// 	RoleSecretMaxId      = 63
-// 	RoleSecretSaltLen    = 16
-// 	RoleSecretBitmapSize = 8
-// 	RoleSecretBufLenSize = 8
-// )
+const (
+	RoleSecretMaxId      = 63
+	RoleSecretSaltLen    = 16
+	RoleSecretBitmapSize = 8
+	RoleSecretBufLenSize = 8
+)
 
-// type RoleSecretSharedKey struct {
-// 	salt []byte
-// 	buf  crypto.CipherBuf
-// }
+type RoleSecretSharedKey struct {
+	salt []byte
+	buf  crypto.CipherBuf
+}
 
-// type RoleSecret[
-// 	KDF crypto.KDF,
-// 	CSPRNG crypto.CSPRNG,
-// 	Cipher crypto.Cipher] struct {
-// 	kdf        KDF
-// 	csprng     CSPRNG
-// 	cipher     Cipher
-// 	bitmap     uint64
-// 	mainIV     crypto.CipherIV
-// 	mainKey    []byte
-// 	sharedKeys *avl.Tree[int, RoleSecretSharedKey]
-// }
+type RoleSecret[
+	KDF crypto.KDF,
+	RNG crypto.CSPRNG,
+	Cipher crypto.Cipher] struct {
+	kdf        KDF
+	rng        RNG
+	cipher     Cipher
+	bitmap     uint64
+	mainKey    []byte
+	sharedKeys *avl.Tree[int, RoleSecretSharedKey]
+}
 
-// func MakeRoleSecret[
-// 	KDF crypto.KDF,
-// 	CSPRNG crypto.CSPRNG,
-// 	Cipher crypto.Cipher](
-// 	kdf KDF,
-// 	csprng CSPRNG,
-// 	cipher Cipher,
-// 	iv crypto.CipherIV,
-// 	passphrase string) (*RoleSecret[KDF, CSPRNG, Cipher], int, error) {
-// 	key, err := csprng.Block(int(cipher.KeyLen()))
-// 	if err != nil {
-// 		return nil, -1, err
-// 	}
-// 	rawIV, err := csprng.Block(int(cipher.IVLen()))
-// 	if err != nil {
-// 		return nil, -1, err
-// 	}
-// 	mainIV, _ := cipher.LoadIV(rawIV)
-// 	secret := &RoleSecret[KDF, CSPRNG, Cipher]{
-// 		kdf:        kdf,
-// 		csprng:     csprng,
-// 		cipher:     cipher,
-// 		mainIV:     mainIV,
-// 		mainKey:    key,
-// 		sharedKeys: avl.New[int, RoleSecretSharedKey](),
-// 	}
-// 	id, err := secret.Add(iv, passphrase)
-// 	return secret, id, err
-// }
+func MakeRoleSecret[
+	KDF crypto.KDF,
+	RNG crypto.CSPRNG,
+	Cipher crypto.Cipher](
+	kdf KDF,
+	rng RNG,
+	cipher Cipher,
+	iv crypto.CipherIV,
+	passphrase string) (*RoleSecret[KDF, RNG, Cipher], int, error) {
+	key, err := rng.Block(int(cipher.KeyLen()))
+	if err != nil {
+		return nil, -1, err
+	}
+	secret := &RoleSecret[KDF, RNG, Cipher]{
+		kdf:        kdf,
+		rng:        rng,
+		cipher:     cipher,
+		mainKey:    key,
+		sharedKeys: avl.New[int, RoleSecretSharedKey](),
+	}
+	id, err := secret.Add(iv, passphrase)
+	return secret, id, err
+}
 
-// func (secret *RoleSecret[KDF, CSPRNG, Cipher]) Add(
-// 	iv crypto.CipherIV, passphrase string) (int, error) {
-// 	if secret.bitmap == 0xffffffffffffffff {
-// 		return -1, crypto.ErrSharingExceedsLimit
-// 	}
-// 	salt, err := secret.csprng.Block(RoleSecretSaltLen)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	key := secret.kdf.Key(passphrase, salt, secret.cipher.KeyLen())
-// 	buf, err := secret.cipher.Encrypt(iv, key, secret.mainKey)
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	id := bits.TrailingZeros64(^secret.bitmap)
-// 	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
-// 	secret.bitmap |= 1 << id
-// 	secret.sharedKeys.Put(id, sharedKey)
-// 	return id, nil
-// }
+func (secret *RoleSecret[KDF, RNG, Cipher]) Add(
+	iv crypto.CipherIV, passphrase string) (int, error) {
+	if secret.bitmap == 0xffffffffffffffff {
+		return -1, crypto.ErrSharingExceedsLimit
+	}
+	salt, err := secret.rng.Block(RoleSecretSaltLen)
+	if err != nil {
+		return -1, err
+	}
+	key := secret.kdf.Key(passphrase, salt, secret.cipher.KeyLen())
+	buf, err := secret.cipher.Seal(iv, key, secret.mainKey)
+	if err != nil {
+		return -1, err
+	}
+	id := bits.TrailingZeros64(^secret.bitmap)
+	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
+	secret.bitmap |= 1 << id
+	secret.sharedKeys.Put(id, sharedKey)
+	return id, nil
+}
 
 // func LoadRoleSecret[
 // 	KDF crypto.KDF,

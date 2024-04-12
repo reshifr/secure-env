@@ -12,7 +12,7 @@ import (
 func Test_NewAutoRNG(t *testing.T) {
 	t.Parallel()
 	fn := crypto.FnCSPRNG{}
-	expRNG := AutoRNG{fnCSPRNG: fn}
+	expRNG := AutoRNG{fn: fn}
 
 	rng := NewAutoRNG(fn)
 	assert.Equal(t, expRNG, rng)
