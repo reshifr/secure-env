@@ -4,8 +4,6 @@ type CipherError int
 
 const (
 	ErrInvalidIVLen CipherError = iota + 1
-	ErrInvalidIVFixedLen
-	ErrInvalidRawIVLen
 	ErrInvalidKeyLen
 	ErrInvalidBufferLayout
 	ErrCipherAuthFailed
@@ -15,10 +13,6 @@ func (err CipherError) Error() string {
 	switch err {
 	case ErrInvalidIVLen:
 		return "ErrInvalidIVLen: invalid IV length."
-	case ErrInvalidIVFixedLen:
-		return "ErrInvalidIVFixedLen: invalid IV 'fixed' length."
-	case ErrInvalidRawIVLen:
-		return "ErrInvalidRawIVLen: invalid raw IV length."
 	case ErrInvalidKeyLen:
 		return "ErrInvalidKeyLen: invalid key length."
 	case ErrInvalidBufferLayout:
@@ -32,13 +26,11 @@ func (err CipherError) Error() string {
 
 type CipherIV interface {
 	Len() (ivLen uint32)
-	FixedLen() (fixedLen uint32)
-	Invoke() (newIV CipherIV)
-	Raw() (rawIV []byte)
+	Invoke() (invokedRawIV []byte)
 }
 
 type CipherBuf interface {
-	Len() (bufLen uint64)
+	Len() (bufLen int)
 	RawIV() (rawIV []byte)
 	Ciphertext() (ciphertext []byte)
 	Raw() (rawBuf []byte)

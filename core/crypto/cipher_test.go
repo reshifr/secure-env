@@ -16,22 +16,6 @@ func Test_CipherError_Error(t *testing.T) {
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})
-	t.Run("ErrInvalidIVFixedLen value", func(t *testing.T) {
-		t.Parallel()
-		err := ErrInvalidIVFixedLen
-		expMsg := "ErrInvalidIVFixedLen: invalid IV 'fixed' length."
-
-		msg := err.Error()
-		assert.Equal(t, expMsg, msg)
-	})
-	t.Run("ErrInvalidRawIVLen value", func(t *testing.T) {
-		t.Parallel()
-		err := ErrInvalidRawIVLen
-		expMsg := "ErrInvalidRawIVLen: invalid raw IV length."
-
-		msg := err.Error()
-		assert.Equal(t, expMsg, msg)
-	})
 	t.Run("ErrInvalidKeyLen value", func(t *testing.T) {
 		t.Parallel()
 		err := ErrInvalidKeyLen
