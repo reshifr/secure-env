@@ -22,7 +22,7 @@ type RoleSecretSharedKey struct {
 type RoleSecret[
 	KDF crypto.KDF,
 	RNG crypto.CSPRNG,
-	Cipher crypto.Cipher] struct {
+	Cipher crypto.CipherAE] struct {
 	kdf        KDF
 	rng        RNG
 	cipher     Cipher
@@ -34,7 +34,7 @@ type RoleSecret[
 func MakeRoleSecret[
 	KDF crypto.KDF,
 	RNG crypto.CSPRNG,
-	Cipher crypto.Cipher](
+	Cipher crypto.CipherAE](
 	kdf KDF,
 	rng RNG,
 	cipher Cipher,
