@@ -73,6 +73,7 @@ func Test_ChaChaPolyAE_Seal(t *testing.T) {
 		key, _ := hex.DecodeString(
 			"f1507d5e3f9e2fc69dce797acc3cf95c" +
 				"a5636a597c9a07becb81023bae55d00d")
+
 		rawIV, _ := hex.DecodeString("111111112222222222222222")
 		iv.EXPECT().Invoke().Return(rawIV).Once()
 
@@ -88,82 +89,79 @@ func Test_ChaChaPolyAE_Seal(t *testing.T) {
 	})
 }
 
-// func Test_ChaCha20Poly1305AE_Decrypt(t *testing.T) {
-// 	t.Parallel()
-// 	cipher := ChaCha20Poly1305AE{}
+func Test_ChaChaPolyAE_Open(t *testing.T) {
+	t.Parallel()
+	cipher := ChaChaPolyAE{}
 
-// 	t.Run("ErrInvalidRawIVLen error", func(t *testing.T) {
-// 		t.Parallel()
-// 		buf := cmock.NewCipherBuf(t)
-// 		rawIV := bytes.Repeat([]byte{0xff}, 8)
-// 		buf.EXPECT().RawIV().Return(rawIV).Once()
+	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
+		t.Parallel()
+		buf := cmock.NewCipherBuf(t)
+		rawIV := bytes.Repeat([]byte{0xff}, 8)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
 
-// 		var expPlaintext []byte = nil
-// 		expErr := crypto.ErrInvalidRawIVLen
+		var expPlaintext []byte = nil
+		const expErr = crypto.ErrInvalidIVLen
 
-// 		plaintext, err := cipher.Decrypt(nil, buf)
-// 		assert.Equal(t, expPlaintext, plaintext)
-// 		assert.ErrorIs(t, err, expErr)
-// 	})
-// 	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
-// 		t.Parallel()
-// 		buf := cmock.NewCipherBuf(t)
-// 		rawIV := bytes.Repeat([]byte{0xff}, IV96Len)
-// 		buf.EXPECT().RawIV().Return(rawIV).Once()
+		plaintext, err := cipher.Open(nil, buf)
+		assert.Equal(t, expPlaintext, plaintext)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
+		t.Parallel()
+		buf := cmock.NewCipherBuf(t)
+		rawIV := bytes.Repeat([]byte{0xff}, ChaChaPolyAEIVLen)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
 
-// 		key := bytes.Repeat([]byte{0xff}, 8)
-// 		var expPlaintext []byte = nil
-// 		expErr := crypto.ErrInvalidKeyLen
+		key := bytes.Repeat([]byte{0xff}, 8)
+		var expPlaintext []byte = nil
+		const expErr = crypto.ErrInvalidKeyLen
 
-// 		plaintext, err := cipher.Decrypt(key, buf)
-// 		assert.Equal(t, expPlaintext, plaintext)
-// 		assert.ErrorIs(t, err, expErr)
-// 	})
+		plaintext, err := cipher.Open(key, buf)
+		assert.Equal(t, expPlaintext, plaintext)
+		assert.ErrorIs(t, err, expErr)
+	})
 
-// 	fixed := uint32(0x01020304)
-// 	invocation := uint64(1000)
-// 	rawIV := binary.BigEndian.AppendUint32(nil, fixed)
-// 	rawIV = binary.BigEndian.AppendUint64(rawIV, invocation)
+	rawIV, _ := hex.DecodeString("111111112222222222222222")
 
-// 	t.Run("ErrCipherAuthFailed error", func(t *testing.T) {
-// 		t.Parallel()
-// 		buf := cmock.NewCipherBuf(t)
-// 		buf.EXPECT().RawIV().Return(rawIV).Once()
+	t.Run("ErrCipherAuthFailed error", func(t *testing.T) {
+		t.Parallel()
+		buf := cmock.NewCipherBuf(t)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
 
-// 		key, _ := hex.DecodeString(
-// 			"b2c1bccf1d6953bdbf5ccccc8f6355af" +
-// 				"02b1d8c8f1e0b4fe3af9c8409be933d5")
+		key, _ := hex.DecodeString(
+			"e4a1869b8db702549b4d0d69d5c0482c" +
+				"1a82a2e8fa7191c2ea7aaa2dbd2631b9")
 
-// 		ciphertext, _ := hex.DecodeString(
-// 			"af0c76018d553a976365420ff26a7dc7" +
-// 				"a1e95fe40a27f1e733c067b990")
-// 		buf.EXPECT().Ciphertext().Return(ciphertext).Once()
+		ciphertext, _ := hex.DecodeString(
+			"60e649ea00241fd69a3df92b82d9729d" +
+				"f130ab55c66bdf03b0fcc8b70b")
+		buf.EXPECT().Ciphertext().Return(ciphertext).Once()
 
-// 		var expPlaintext []byte = nil
-// 		expErr := crypto.ErrCipherAuthFailed
+		var expPlaintext []byte = nil
+		const expErr = crypto.ErrCipherAuthFailed
 
-// 		plaintext, err := cipher.Decrypt(key, buf)
-// 		assert.Equal(t, expPlaintext, plaintext)
-// 		assert.ErrorIs(t, err, expErr)
-// 	})
-// 	t.Run("Succeed", func(t *testing.T) {
-// 		t.Parallel()
-// 		buf := cmock.NewCipherBuf(t)
-// 		buf.EXPECT().RawIV().Return(rawIV).Once()
+		plaintext, err := cipher.Open(key, buf)
+		assert.Equal(t, expPlaintext, plaintext)
+		assert.ErrorIs(t, err, expErr)
+	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		buf := cmock.NewCipherBuf(t)
+		buf.EXPECT().RawIV().Return(rawIV).Once()
 
-// 		key, _ := hex.DecodeString(
-// 			"00b7f8ef132f263f63e9c5b61549b756" +
-// 				"4b15b9e50eb793019c888d11f4231d00")
+		key, _ := hex.DecodeString(
+			"f1507d5e3f9e2fc69dce797acc3cf95c" +
+				"a5636a597c9a07becb81023bae55d00d")
 
-// 		ciphertext, _ := hex.DecodeString(
-// 			"af0c76018d553a976365420ff26a7dc7" +
-// 				"a1e95fe40a27f1e733c067b990")
-// 		buf.EXPECT().Ciphertext().Return(ciphertext).Once()
+		ciphertext, _ := hex.DecodeString(
+			"60e649ea00241fd69a3df92b82d9729d" +
+				"f130ab55c66bdf03b0fcc8b70b")
+		buf.EXPECT().Ciphertext().Return(ciphertext).Once()
 
-// 		expPlaintext := []byte("Hello, World!")
+		expPlaintext := []byte("Hello, World!")
 
-// 		plaintext, err := cipher.Decrypt(key, buf)
-// 		assert.Equal(t, expPlaintext, plaintext)
-// 		assert.ErrorIs(t, err, nil)
-// 	})
-// }
+		plaintext, err := cipher.Open(key, buf)
+		assert.Equal(t, expPlaintext, plaintext)
+		assert.ErrorIs(t, err, nil)
+	})
+}
