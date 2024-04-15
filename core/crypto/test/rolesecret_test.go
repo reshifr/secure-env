@@ -3,7 +3,6 @@ package crypto_test
 import (
 	"crypto/md5"
 	"crypto/rand"
-	"encoding/binary"
 	"testing"
 
 	c "github.com/reshifr/secure-env/core/crypto"
@@ -13,7 +12,7 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-func Test_RoleSecret(t *testing.T) {
+func Test_RoleSecret_Raw(t *testing.T) {
 	t.Parallel()
 	kdf := cmock.NewKDF(t)
 	kdf.EXPECT().Key(mock.Anything, mock.Anything, mock.Anything).RunAndReturn(
@@ -56,53 +55,36 @@ func Test_RoleSecret(t *testing.T) {
 		}
 	}
 
+	secret.Del(100)
+	secret.Del(5)
+	secret.Del(2)
 	raw := secret.Raw()
-	t.Logf("%x\n", raw)
+	// t.Logf("Raw: %x\n", raw)
 
-	// msg := []byte("Hello, World!")
-	// buf := secret.Encrypt(msg)
-	// plaintext, err := secret.Decrypt(buf)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// assert.Equal(t, msg, plaintext)
-
-	// raw := secret.Raw()
-	// secretLoaded, err := cimpl.LoadRoleSecret(kdf,
-	// 	rng, cipher, raw, ownerId, ownerPassphrase)
-
-	// // secretLoaded.Del(5)
-	// // secretLoaded.Del(1)
-	// secretLoaded.DEBUG()
-
-	// t.Logf("secretLoaded_error=%v\n", err)
-	// t.Logf("ownerId=%v\n", ownerId)
-	// raw = secretLoaded.Raw()
-
-	// // _, err = cimpl.LoadRoleSecret(kdf,
-	// // 	rng, cipher, raw, 5, passphrases[0])
-	// // t.Logf("secretLoaded_error2=%v\n", err)
-
-	// // raw = secretLoaded.Raw()
-	// // t.Log(raw)
-
-	bitmap := binary.BigEndian.Uint64(raw)
-	t.Logf("Bitmap: %064b\n", bitmap)
-	t.Logf("Bitmap: %016x\n", bitmap)
-	i := cimpl.RoleSecretBitmapSize
-	bufLen := int(raw[i])
-	t.Logf("BufLen: %v\n", bufLen)
-	i += cimpl.RoleSecretBufLenSize
-	order := 0
-	for len(raw[i:]) != 0 {
-		t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.RoleSecretSaltLen])
-		i += cimpl.RoleSecretSaltLen
-		t.Logf("Buf[%v]: %x\n", order, raw[i:i+cimpl.AE96BufIVLen])
-		t.Logf("Buf[%v]: %x\n", order, raw[i+cimpl.AE96BufIVLen:i+bufLen])
-		i += bufLen
-		order++
+	secret2, err := cimpl.LoadRoleSecret(kdf, rng, cipher, raw, 3, passphrases[0])
+	if err != nil {
+		t.Fatal(err)
 	}
+	t.Log(secret2)
+	t.Logf("Raw2 %x\n", secret2.Raw())
 
-	t.Log(len(raw))
-	t.Log(i)
+	// bitmap := binary.BigEndian.Uint64(raw)
+	// t.Logf("Bitmap: %064b\n", bitmap)
+	// t.Logf("Bitmap: %016x\n", bitmap)
+	// i := cimpl.RoleSecretBitmapSize
+	// bufLen := int(raw[i])
+	// t.Logf("BufLen: %v\n", bufLen)
+	// i += cimpl.RoleSecretBufLenSize
+	// order := 0
+	// for len(raw[i:]) != 0 {
+	// 	t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.RoleSecretSaltLen])
+	// 	i += cimpl.RoleSecretSaltLen
+	// 	t.Logf("Buf[%v]: %x\n", order, raw[i:i+cimpl.AE96BufIVLen])
+	// 	t.Logf("Buf[%v]: %x\n", order, raw[i+cimpl.AE96BufIVLen:i+bufLen])
+	// 	i += bufLen
+	// 	order++
+	// }
+
+	// t.Log(len(raw))
+	// t.Log(i)
 }
