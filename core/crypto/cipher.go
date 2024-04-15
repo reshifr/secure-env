@@ -36,7 +36,7 @@ type CipherBuf interface {
 	Raw() (rawBuf []byte)
 }
 
-type Cipher interface {
+type CipherAE interface {
 	KeyLen() (keyLen uint32)
 	MakeBuf(rawIV []byte, ciphertext []byte) (buf CipherBuf, err error)
 	LoadBuf(rawBuf []byte) (buf CipherBuf, err error)
