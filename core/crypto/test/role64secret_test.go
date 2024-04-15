@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-func Test_RoleSecret_Raw(t *testing.T) {
+func Test_Role64Secret_Raw(t *testing.T) {
 	t.Parallel()
 	kdf := cmock.NewKDF(t)
 	kdf.EXPECT().Key(mock.Anything, mock.Anything, mock.Anything).RunAndReturn(
@@ -26,7 +26,7 @@ func Test_RoleSecret_Raw(t *testing.T) {
 	fn := c.FnCSPRNG{Read: rand.Read}
 	rng := cimpl.NewAutoRNG(fn)
 	cipher := cimpl.ChaChaPolyAE{}
-	secret, err := cimpl.MakeRoleSecret(kdf, rng, cipher)
+	secret, err := cimpl.MakeRole64Secret(kdf, rng, cipher)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,10 +58,11 @@ func Test_RoleSecret_Raw(t *testing.T) {
 	secret.Del(100)
 	secret.Del(5)
 	secret.Del(2)
-	raw := secret.Raw()
+	rawSecret := secret.Raw()
 	// t.Logf("Raw: %x\n", raw)
 
-	secret2, err := cimpl.LoadRoleSecret(kdf, rng, cipher, raw, 3, passphrases[0])
+	secret2, err := cimpl.LoadRole64Secret(
+		kdf, rng, cipher, 3, passphrases[0], rawSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,14 +72,14 @@ func Test_RoleSecret_Raw(t *testing.T) {
 	// bitmap := binary.BigEndian.Uint64(raw)
 	// t.Logf("Bitmap: %064b\n", bitmap)
 	// t.Logf("Bitmap: %016x\n", bitmap)
-	// i := cimpl.RoleSecretBitmapSize
+	// i := cimpl.Role64SecretBitmapSize
 	// bufLen := int(raw[i])
 	// t.Logf("BufLen: %v\n", bufLen)
-	// i += cimpl.RoleSecretBufLenSize
+	// i += cimpl.Role64SecretBufLenSize
 	// order := 0
 	// for len(raw[i:]) != 0 {
-	// 	t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.RoleSecretSaltLen])
-	// 	i += cimpl.RoleSecretSaltLen
+	// 	t.Logf("Salt[%v]: %x\n", order, raw[i:i+cimpl.Role64SecretSaltLen])
+	// 	i += cimpl.Role64SecretSaltLen
 	// 	t.Logf("Buf[%v]: %x\n", order, raw[i:i+cimpl.AE96BufIVLen])
 	// 	t.Logf("Buf[%v]: %x\n", order, raw[i+cimpl.AE96BufIVLen:i+bufLen])
 	// 	i += bufLen

@@ -1,15 +1,15 @@
 package crypto
 
-type SecretError int
+type RoleSecretError int
 
 const (
-	ErrSharingExceedsLimit SecretError = iota + 1
+	ErrSharingExceedsLimit RoleSecretError = iota + 1
 	ErrInvalidSecretId
 	ErrBrokenSecretIntegrity
 	ErrIdDoesNotExist
 )
 
-func (err SecretError) Error() string {
+func (err RoleSecretError) Error() string {
 	switch err {
 	case ErrSharingExceedsLimit:
 		return "ErrSharingExceedsLimit: " +
@@ -24,3 +24,5 @@ func (err SecretError) Error() string {
 		return "Error: unknown."
 	}
 }
+
+type RoleSecret interface{}

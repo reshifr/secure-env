@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_MakeRoleSecret(t *testing.T) {
+func Test_MakeRole64Secret(t *testing.T) {
 	t.Parallel()
 	kdf := cmock.NewKDF(t)
 
@@ -25,9 +25,10 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, expErr).Once()
 
-		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE] = nil
+		var expSecret *Role64Secret[
+			*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE] = nil
 
-		secret, err := MakeRoleSecret(kdf, rng, cipher)
+		secret, err := MakeRole64Secret(kdf, rng, cipher)
 		assert.Equal(t, secret, expSecret)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -37,14 +38,14 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE]{
+		expSecret := &Role64Secret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE]{
 			kdf:     kdf,
 			rng:     rng,
 			cipher:  cipher,
 			mainKey: key,
 		}
 
-		secret, err := MakeRoleSecret(kdf, rng, cipher)
+		secret, err := MakeRole64Secret(kdf, rng, cipher)
 		assert.True(t, secret.sharedKeys.Empty())
 		secret.sharedKeys = nil
 		assert.Equal(t, expSecret, secret)
@@ -52,7 +53,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 	})
 }
 
-// func Test_LoadRoleSecret(t *testing.T) {
+// func Test_LoadRole64Secret(t *testing.T) {
 // 	t.Parallel()
 // 	kdf := cmock.NewKDF(t)
 // 	rng := cmock.NewCSPRNG(t)
@@ -63,9 +64,9 @@ func Test_MakeRoleSecret(t *testing.T) {
 
 // 		id := -1
 // 		expErr := crypto.ErrInvalidSecretId
-// 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+// 		var expSecret *Role64Secret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
-// 		secret, err := LoadRoleSecret(kdf, rng, cipher, nil, id, "")
+// 		secret, err := LoadRole64Secret(kdf, rng, cipher, nil, id, "")
 // 		assert.Equal(t, expSecret, secret)
 // 		assert.Equal(t, expErr, err)
 // 	})
@@ -79,9 +80,9 @@ func Test_MakeRoleSecret(t *testing.T) {
 // 		t.Parallel()
 // 		raw := bytes.Repeat([]byte{0xff}, 8)
 // 		expErr := crypto.ErrInvalidBufferLayout
-// 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+// 		var expSecret *Role64Secret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
-// 		secret, err := LoadRoleSecret(kdf, rng, cipher, raw, id, "")
+// 		secret, err := LoadRole64Secret(kdf, rng, cipher, raw, id, "")
 // 		assert.Equal(t, expSecret, secret)
 // 		assert.Equal(t, expErr, err)
 // 	})
@@ -97,9 +98,9 @@ func Test_MakeRoleSecret(t *testing.T) {
 // 		raw = append(raw, sharedBlock...)
 
 // 		expErr := crypto.ErrInvalidBufferLayout
-// 		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+// 		var expSecret *Role64Secret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
 
-// 		secret, err := LoadRoleSecret(kdf, rng, cipher, raw, id, "")
+// 		secret, err := LoadRole64Secret(kdf, rng, cipher, raw, id, "")
 // 		assert.Equal(t, expSecret, secret)
 // 		assert.Equal(t, expErr, err)
 // 	})
@@ -109,7 +110,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 // 	})
 // }
 
-func Test_RoleSecret_Add(t *testing.T) {
+func Test_Role64Secret_Add(t *testing.T) {
 	t.Parallel()
 	iv := cmock.NewCipherIV(t)
 	const keyLen = 16
@@ -117,7 +118,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		// MakeRoleSecret()
+		// MakeRole64Secret()
 		kdf := cmock.NewKDF(t)
 
 		cipher := cmock.NewCipherAE(t)
@@ -127,24 +128,24 @@ func Test_RoleSecret_Add(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		// RoleSecret.Add()
+		// Role64Secret.Add()
 		const expErr = crypto.ErrReadEntropyFailed
-		rng.EXPECT().Block(RoleSecretSaltLen).Return(nil, expErr).Once()
+		rng.EXPECT().Block(Role64SecretSaltLen).Return(nil, expErr).Once()
 
-		secret, _ := MakeRoleSecret(kdf, rng, cipher)
+		secret, _ := MakeRole64Secret(kdf, rng, cipher)
 		id, err := secret.Add(iv, "")
 		assert.Equal(t, expId, id)
 		assert.ErrorIs(t, err, expErr)
 	})
 
-	// MakeRoleSecret()
+	// MakeRole64Secret()
 	mainKey := bytes.Repeat([]byte{0xff}, keyLen)
 	rng := cmock.NewCSPRNG(t)
 	rng.EXPECT().Block(int(keyLen)).Return(mainKey, nil).Times(2)
 
-	// RoleSecret.Add()
-	salt := bytes.Repeat([]byte{0xff}, RoleSecretSaltLen)
-	rng.EXPECT().Block(RoleSecretSaltLen).Return(salt, nil).Times(65)
+	// Role64Secret.Add()
+	salt := bytes.Repeat([]byte{0xff}, Role64SecretSaltLen)
+	rng.EXPECT().Block(Role64SecretSaltLen).Return(salt, nil).Times(65)
 
 	const passphrase = "Ti2Kiujy+AFWjrgz"
 	key := bytes.Repeat([]byte{0xff}, keyLen)
@@ -153,35 +154,35 @@ func Test_RoleSecret_Add(t *testing.T) {
 
 	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
-		// MakeRoleSecret()
+		// MakeRole64Secret()
 		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
-		// RoleSecret.Add()
+		// Role64Secret.Add()
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		const expErr = crypto.ErrInvalidIVLen
 		cipher.EXPECT().Seal(iv, key, mainKey).Return(nil, expErr).Once()
 
-		secret, _ := MakeRoleSecret(kdf, rng, cipher)
+		secret, _ := MakeRole64Secret(kdf, rng, cipher)
 		id, err := secret.Add(iv, passphrase)
 		assert.Equal(t, expId, id)
 		assert.ErrorIs(t, err, expErr)
 	})
 	t.Run("Succeed => ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
-		// MakeRoleSecret()
+		// MakeRole64Secret()
 		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
-		// RoleSecret.Add()
+		// Role64Secret.Add()
 		cipher.EXPECT().KeyLen().Return(keyLen).Times(64)
 
 		buf := cmock.NewCipherBuf(t)
 		cipher.EXPECT().Seal(iv, key, mainKey).Return(buf, nil).Times(64)
 
 		// Succeed
-		secret, _ := MakeRoleSecret(kdf, rng, cipher)
+		secret, _ := MakeRole64Secret(kdf, rng, cipher)
 		for expId := 0; expId < 64; expId++ {
 			id, err := secret.Add(iv, passphrase)
 			assert.Equal(t, expId, id)
@@ -199,13 +200,13 @@ func Test_RoleSecret_Add(t *testing.T) {
 	})
 }
 
-func Test_RoleSecret_Raw(t *testing.T) {
+func Test_Role64Secret_Raw(t *testing.T) {
 	t.Parallel()
 	t.Run("Empty role", func(t *testing.T) {
 		t.Parallel()
 		var expRawSecret []byte = nil
 
-		secret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE]{}
+		secret := &Role64Secret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE]{}
 		rawSecret := secret.Raw()
 		assert.Equal(t, expRawSecret, rawSecret)
 	})
@@ -214,7 +215,7 @@ func Test_RoleSecret_Raw(t *testing.T) {
 
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		// MakeRoleSecret()
+		// MakeRole64Secret()
 		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
@@ -222,14 +223,14 @@ func Test_RoleSecret_Raw(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(mainKey, nil).Once()
 
-		// RoleSecret.Add()
+		// Role64Secret.Add()
 		salts := [][]byte{
-			bytes.Repeat([]byte{0x20}, RoleSecretSaltLen),
-			bytes.Repeat([]byte{0x21}, RoleSecretSaltLen),
-			bytes.Repeat([]byte{0x22}, RoleSecretSaltLen),
+			bytes.Repeat([]byte{0x20}, Role64SecretSaltLen),
+			bytes.Repeat([]byte{0x21}, Role64SecretSaltLen),
+			bytes.Repeat([]byte{0x22}, Role64SecretSaltLen),
 		}
 		for i := 0; i < 3; i++ {
-			rng.EXPECT().Block(RoleSecretSaltLen).Return(salts[i], nil).Once()
+			rng.EXPECT().Block(Role64SecretSaltLen).Return(salts[i], nil).Once()
 		}
 
 		cipher.EXPECT().KeyLen().Return(keyLen).Times(3)
@@ -260,7 +261,7 @@ func Test_RoleSecret_Raw(t *testing.T) {
 			cipher.EXPECT().Seal(iv, keys[i], mainKey).Return(bufs[i], nil).Once()
 		}
 
-		// RoleSecret.Raw()
+		// Role64Secret.Raw()
 		const bufLen = 11
 		rawBufs := [][]byte{
 			bytes.Repeat([]byte{0x40}, bufLen),
@@ -281,7 +282,7 @@ func Test_RoleSecret_Raw(t *testing.T) {
 			expRawSecret = append(expRawSecret, rawBufs[i]...)
 		}
 
-		secret, _ := MakeRoleSecret(kdf, rng, cipher)
+		secret, _ := MakeRole64Secret(kdf, rng, cipher)
 		for i := 0; i < 3; i++ {
 			secret.Add(iv, passphrases[i])
 		}
