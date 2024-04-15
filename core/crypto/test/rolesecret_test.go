@@ -25,21 +25,20 @@ package crypto_test
 // 			return hval
 // 		}).Maybe()
 
-// 	fnRNG := c.FnCSPRNG{Read: rand.Read}
-// 	rng := cimpl.NewAutoRNG(fnRNG)
-// 	cipher := cimpl.ChaCha20Poly1305AE{}
+// 	fn := c.FnCSPRNG{Read: rand.Read}
+// 	rng := cimpl.NewAutoRNG(fn)
+// 	cipher := cimpl.ChaChaPolyAE{}
 
-// 	ownerIVFixed := [cimpl.IV96FixedLen]byte{}
-// 	if err := rng.Read(ownerIVFixed[:]); err != nil {
+// 	rawIV := [cimpl.GlobalIV96Len]byte{}
+// 	if err := rng.Read(rawIV[:]); err != nil {
 // 		t.Fatal(err)
 // 	}
-// 	ownerIV, err := cimpl.MakeIV96(ownerIVFixed[:])
+// 	iv, err := cimpl.LoadGlobalIV96(rawIV[:])
 // 	if err != nil {
 // 		t.Fatal(err)
 // 	}
-// 	ownerPassphrase := "RodGY-gV7vpz6FHZ6zEKQEhl1.kKz1S,"
-// 	secret, ownerId, err := cimpl.MakeRoleSecret(
-// 		kdf, rng, cipher, ownerIV, ownerPassphrase)
+// 	ownerPassphrase := "77?l6wevta&1WEfI"
+// 	secret, ownerId, err := cimpl.MakeRoleSecret(kdf, rng, cipher, iv, ownerPassphrase)
 // 	if err != nil {
 // 		t.Fatal(err)
 // 	}

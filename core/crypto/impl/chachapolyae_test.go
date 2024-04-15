@@ -12,9 +12,9 @@ import (
 
 func Test_ChaChaPolyAE_KeyLen(t *testing.T) {
 	t.Parallel()
-	cipher := ChaChaPolyAE{}
 	const expKeyLen = uint32(ChaChaPolyAEKeyLen)
 
+	cipher := ChaChaPolyAE{}
 	keyLen := cipher.KeyLen()
 	assert.Equal(t, expKeyLen, keyLen)
 }
