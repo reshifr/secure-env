@@ -14,7 +14,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 	kdf := cmock.NewKDF(t)
 
 	const keyLen = 16
-	cipher := cmock.NewCipher(t)
+	cipher := cmock.NewCipherAE(t)
 	cipher.EXPECT().KeyLen().Return(keyLen).Twice()
 
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, expErr).Once()
 
-		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher] = nil
+		var expSecret *RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE] = nil
 
 		secret, err := MakeRoleSecret(kdf, rng, cipher)
 		assert.Equal(t, secret, expSecret)
@@ -36,7 +36,7 @@ func Test_MakeRoleSecret(t *testing.T) {
 		rng := cmock.NewCSPRNG(t)
 		rng.EXPECT().Block(int(keyLen)).Return(key, nil).Once()
 
-		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.Cipher]{
+		expSecret := &RoleSecret[*cmock.KDF, *cmock.CSPRNG, *cmock.CipherAE]{
 			kdf:     kdf,
 			rng:     rng,
 			cipher:  cipher,
@@ -119,7 +119,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 		// MakeRoleSecret()
 		kdf := cmock.NewKDF(t)
 
-		cipher := cmock.NewCipher(t)
+		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		key := bytes.Repeat([]byte{0xff}, keyLen)
@@ -153,7 +153,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
 		// MakeRoleSecret()
-		cipher := cmock.NewCipher(t)
+		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		// RoleSecret.Add()
@@ -170,7 +170,7 @@ func Test_RoleSecret_Add(t *testing.T) {
 	t.Run("Succeed => ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
 		// MakeRoleSecret()
-		cipher := cmock.NewCipher(t)
+		cipher := cmock.NewCipherAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		// RoleSecret.Add()
