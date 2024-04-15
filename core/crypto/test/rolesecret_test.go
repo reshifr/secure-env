@@ -40,21 +40,15 @@ func Test_RoleSecret(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// passphrases := []string{
-	// 	"cKN8y~yQ@GkY1&D_",
-	// 	"I,Jv0Aic/RG.RF_K",
-	// 	"4+/mqVQy5wmknWp4",
-	// 	"Fy_Z7NUB_r+8_nq5",
-	// 	"n06vobd3FMJbf+rI",
-	// 	"Za6i88X-9VW?UppK",
-	// 	"qm4_NhqU?@CjuvZr",
-	// }
-
-	passphrases := []string{}
-	for i := 0; i < 64; i++ {
-		passphrases = append(passphrases, "hello")
+	passphrases := []string{
+		"cKN8y~yQ@GkY1&D_",
+		"I,Jv0Aic/RG.RF_K",
+		"4+/mqVQy5wmknWp4",
+		"Fy_Z7NUB_r+8_nq5",
+		"n06vobd3FMJbf+rI",
+		"Za6i88X-9VW?UppK",
+		"qm4_NhqU?@CjuvZr",
 	}
-
 	for _, passphrase := range passphrases {
 		id, err := secret.Add(iv, passphrase)
 		if err != nil {
