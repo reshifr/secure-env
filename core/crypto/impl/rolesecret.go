@@ -12,7 +12,7 @@ const (
 	RoleSecretMaxId      = 63
 	RoleSecretSaltLen    = 16
 	RoleSecretBitmapSize = 8
-	RoleSecretBufLenSize = 8
+	RoleSecretBufLenSize = 1
 )
 
 type RoleSecretSharedKey struct {
@@ -29,7 +29,7 @@ type RoleSecret[
 	cipher     Cipher
 	bitmap     uint64
 	mainKey    []byte
-	sharedKeys *avl.Tree[int, RoleSecretSharedKey]
+	sharedKeys *avl.Tree[int8, RoleSecretSharedKey]
 }
 
 func MakeRoleSecret[KDF crypto.KDF, RNG crypto.CSPRNG, Cipher crypto.CipherAE](
@@ -43,7 +43,7 @@ func MakeRoleSecret[KDF crypto.KDF, RNG crypto.CSPRNG, Cipher crypto.CipherAE](
 		rng:        rng,
 		cipher:     cipher,
 		mainKey:    key,
-		sharedKeys: avl.New[int, RoleSecretSharedKey](),
+		sharedKeys: avl.New[int8, RoleSecretSharedKey](),
 	}
 	return secret, err
 }
@@ -169,7 +169,7 @@ func (secret *RoleSecret[KDF, RNG, Cipher]) Add(
 	id := bits.TrailingZeros64(^secret.bitmap)
 	sharedKey := RoleSecretSharedKey{salt: salt, buf: buf}
 	secret.bitmap |= 1 << id
-	secret.sharedKeys.Put(id, sharedKey)
+	secret.sharedKeys.Put(int8(id), sharedKey)
 	return id, nil
 }
 
@@ -194,14 +194,17 @@ func (secret *RoleSecret[KDF, RNG, Cipher]) Add(
 // }
 
 func (secret *RoleSecret[KDF, RNG, Cipher]) Raw() []byte {
+	if secret.bitmap == 0 {
+		return nil
+	}
 	bufLen := 0
 	sharedKeysLen := 0
-	n := secret.sharedKeys.Size()
 	it := secret.sharedKeys.Iterator()
-	if it.Begin(); it.Next() {
+	if it.Next() {
 		sharedKey := it.Value()
 		bufLen = sharedKey.buf.Len()
-		sharedKeysLen += bufLen*n + RoleSecretSaltLen*n
+		n := secret.sharedKeys.Size()
+		sharedKeysLen = RoleSecretSaltLen*n + bufLen*n
 	}
 
 	rawLen := RoleSecretBitmapSize + RoleSecretBufLenSize + sharedKeysLen
@@ -209,7 +212,7 @@ func (secret *RoleSecret[KDF, RNG, Cipher]) Raw() []byte {
 
 	binary.BigEndian.PutUint64(raw, secret.bitmap)
 	i := RoleSecretBitmapSize
-	binary.BigEndian.PutUint64(raw[i:], uint64(bufLen))
+	raw[i] = byte(bufLen)
 	i += RoleSecretBufLenSize
 	for it.Begin(); it.Next(); {
 		sharedKey := it.Value()
