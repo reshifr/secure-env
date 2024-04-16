@@ -3,8 +3,6 @@ package env_impl
 import (
 	"database/sql"
 	"testing"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func Test_SQLiteEnv(t *testing.T) {

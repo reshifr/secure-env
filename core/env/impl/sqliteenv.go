@@ -2,6 +2,8 @@ package env_impl
 
 import (
 	"database/sql"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SQLiteEnv struct {
