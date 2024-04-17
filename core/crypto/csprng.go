@@ -16,11 +16,11 @@ func (err CSPRNGError) Error() string {
 	}
 }
 
-type FnCSPRNG struct {
-	Read func(b []byte) (n int, err error)
-}
-
 type CSPRNG interface {
 	Block(blockLen int) (block []byte, err error)
 	Read(block []byte) (err error)
+}
+
+type FnCSPRNG struct {
+	Read func(b []byte) (n int, err error)
 }

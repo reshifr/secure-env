@@ -16,17 +16,8 @@ func (ChaChaPolyAE) KeyLen() uint32 {
 	return ChaChaPolyAEKeyLen
 }
 
-func (ChaChaPolyAE) MakeBuf(rawIV []byte,
-	ciphertext []byte) (crypto.CipherBuf, error) {
-	return MakeAE96Buf(rawIV, ciphertext)
-}
-
-func (ChaChaPolyAE) LoadBuf(rawBuf []byte) (crypto.CipherBuf, error) {
-	return LoadAE96Buf(rawBuf)
-}
-
-func (ae ChaChaPolyAE) Seal(iv crypto.CipherIV,
-	key []byte, plaintext []byte) (crypto.CipherBuf, error) {
+func (ChaChaPolyAE) Seal(
+	iv crypto.IV, key []byte, plaintext []byte) ([]byte, error) {
 	if iv.Len() != ChaChaPolyAEIVLen {
 		return nil, crypto.ErrInvalidIVLen
 	}
@@ -36,24 +27,25 @@ func (ae ChaChaPolyAE) Seal(iv crypto.CipherIV,
 	}
 	rawIV := iv.Invoke()
 	ciphertext := chacha.Seal(nil, rawIV, plaintext, nil)
-	buf, _ := ae.MakeBuf(rawIV, ciphertext)
+	buf := make([]byte, ChaChaPolyAEIVLen+len(ciphertext))
+	copy(buf, rawIV)
+	copy(buf[ChaChaPolyAEIVLen:], ciphertext)
 	return buf, nil
 }
 
-func (ChaChaPolyAE) Open(
-	key []byte, buf crypto.CipherBuf) ([]byte, error) {
-	rawIV := buf.RawIV()
-	if len(rawIV) != ChaChaPolyAEIVLen {
-		return nil, crypto.ErrInvalidIVLen
+func (ChaChaPolyAE) Open(key []byte, buf []byte) ([]byte, error) {
+	if len(buf) < ChaChaPolyAEIVLen {
+		return nil, crypto.ErrInvalidBufLayout
 	}
 	chacha, err := chacha20poly1305.New(key)
 	if err != nil {
 		return nil, crypto.ErrInvalidKeyLen
 	}
-	ciphertext := buf.Ciphertext()
+	rawIV := buf[:ChaChaPolyAEIVLen]
+	ciphertext := buf[ChaChaPolyAEIVLen:]
 	plaintext, err := chacha.Open(nil, rawIV, ciphertext, nil)
 	if err != nil {
-		return nil, crypto.ErrCipherAuthFailed
+		return nil, crypto.ErrAuthFailed
 	}
 	return plaintext, nil
 }

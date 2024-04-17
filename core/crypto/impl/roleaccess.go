@@ -9,32 +9,32 @@ const (
 type RoleAccess[
 	KDF crypto.KDF,
 	RNG crypto.CSPRNG,
-	Cipher crypto.CipherAE,
-	IV crypto.CipherIV] struct {
+	IV crypto.IV,
+	Cipher crypto.AE] struct {
 	kdf    KDF
 	rng    RNG
-	cipher Cipher
 	iv     IV
+	cipher Cipher
 }
 
 func NewRoleAccess[
 	KDF crypto.KDF,
 	RNG crypto.CSPRNG,
-	Cipher crypto.CipherAE,
-	IV crypto.CipherIV](
+	IV crypto.IV,
+	Cipher crypto.AE](
 	kdf KDF,
 	rng RNG,
-	cipher Cipher,
-	iv IV) *RoleAccess[KDF, RNG, Cipher, IV] {
-	return &RoleAccess[KDF, RNG, Cipher, IV]{
+	iv IV,
+	cipher Cipher) *RoleAccess[KDF, RNG, IV, Cipher] {
+	return &RoleAccess[KDF, RNG, IV, Cipher]{
 		kdf:    kdf,
 		rng:    rng,
-		cipher: cipher,
 		iv:     iv,
+		cipher: cipher,
 	}
 }
 
-func (acc *RoleAccess[KDF, RNG, Cipher, IV]) Secret(
+func (acc *RoleAccess[KDF, RNG, IV, Cipher]) Secret(
 	passphrase string) (*RoleSecret, error) {
 	keyLen := acc.cipher.KeyLen()
 	accKey, err := acc.rng.Block(int(keyLen))
@@ -54,7 +54,6 @@ func (acc *RoleAccess[KDF, RNG, Cipher, IV]) Secret(
 	return secret, nil
 }
 
-func (acc *RoleAccess[KDF, RNG, Cipher, IV]) Inherit(
+func (acc *RoleAccess[KDF, RNG, IV, Cipher]) Inherit(
 	parentPassphrase string, childPassphrase string) {
-
 }

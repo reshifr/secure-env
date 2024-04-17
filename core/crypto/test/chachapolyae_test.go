@@ -19,9 +19,9 @@ func Test_ChaChaPolyAE_Open(t *testing.T) {
 		cipher := cimpl.ChaChaPolyAE{}
 		plaintext := []byte("Hello, World!")
 
-		rawIV := [cimpl.GlobalIV96Len]byte{}
+		rawIV := [cimpl.IV96Len]byte{}
 		rng.Read(rawIV[:])
-		iv, _ := cimpl.LoadGlobalIV96(rawIV[:])
+		iv, _ := cimpl.LoadIV96(rawIV[:])
 		baseKey, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
 		baseBuf, _ := cipher.Seal(iv, baseKey, plaintext)
 
@@ -29,7 +29,7 @@ func Test_ChaChaPolyAE_Open(t *testing.T) {
 		for i := 0; i < executed; i++ {
 			key, _ := rng.Block(cimpl.ChaChaPolyAEKeyLen)
 			buf, _ := cipher.Seal(iv, key, plaintext)
-			assert.Equal(t, baseBuf.Len(), buf.Len())
+			assert.Equal(t, len(baseBuf), len(buf))
 		}
 	})
 }

@@ -19,33 +19,16 @@ func Test_ChaChaPolyAE_KeyLen(t *testing.T) {
 	assert.Equal(t, expKeyLen, keyLen)
 }
 
-func Test_ChaChaPolyAE_MakeBuf(t *testing.T) {
-	t.Parallel()
-	rawIV := make([]byte, ChaChaPolyAEIVLen)
-	ciphertext, _ := hex.DecodeString("ce3ff9d23231a582")
-
-	cipher := ChaChaPolyAE{}
-	cipher.MakeBuf(rawIV, ciphertext)
-}
-
-func Test_ChaChaPolyAE_LoadBuf(t *testing.T) {
-	t.Parallel()
-	rawBuf, _ := hex.DecodeString("f5bbbc589cf1246cbcd47b61f8109b1804544156")
-
-	cipher := ChaChaPolyAE{}
-	cipher.LoadBuf(rawBuf)
-}
-
 func Test_ChaChaPolyAE_Seal(t *testing.T) {
 	t.Parallel()
 	cipher := ChaChaPolyAE{}
 
 	t.Run("ErrInvalidIVLen error", func(t *testing.T) {
 		t.Parallel()
-		iv := cmock.NewCipherIV(t)
+		iv := cmock.NewIV(t)
 		iv.EXPECT().Len().Return(8).Once()
 
-		var expBuf crypto.CipherBuf = nil
+		var expBuf []byte = nil
 		const expErr = crypto.ErrInvalidIVLen
 
 		buf, err := cipher.Seal(iv, nil, nil)
@@ -54,11 +37,11 @@ func Test_ChaChaPolyAE_Seal(t *testing.T) {
 	})
 	t.Run("ErrInvalidKeyLen error", func(t *testing.T) {
 		t.Parallel()
-		iv := cmock.NewCipherIV(t)
+		iv := cmock.NewIV(t)
 		iv.EXPECT().Len().Return(ChaChaPolyAEIVLen).Once()
 
 		key := bytes.Repeat([]byte{0xff}, 8)
-		var expBuf crypto.CipherBuf = nil
+		var expBuf []byte = nil
 		const expErr = crypto.ErrInvalidKeyLen
 
 		buf, err := cipher.Seal(iv, key, nil)
@@ -67,7 +50,7 @@ func Test_ChaChaPolyAE_Seal(t *testing.T) {
 	})
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
-		iv := cmock.NewCipherIV(t)
+		iv := cmock.NewIV(t)
 		iv.EXPECT().Len().Return(ChaChaPolyAEIVLen).Once()
 
 		key, _ := hex.DecodeString(
@@ -81,7 +64,7 @@ func Test_ChaChaPolyAE_Seal(t *testing.T) {
 		ciphertext, _ := hex.DecodeString(
 			"60e649ea00241fd69a3df92b82d9729d" +
 				"f130ab55c66bdf03b0fcc8b70b")
-		expBuf, _ := cipher.MakeBuf(rawIV, ciphertext)
+		expBuf := append(rawIV, ciphertext...)
 
 		buf, err := cipher.Seal(iv, key, plaintext)
 		assert.Equal(t, buf, expBuf)
