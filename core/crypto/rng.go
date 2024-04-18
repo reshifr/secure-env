@@ -1,12 +1,12 @@
 package crypto
 
-type CSPRNGError int
+type RNGError int
 
 const (
-	ErrReadEntropyFailed CSPRNGError = iota + 1
+	ErrReadEntropyFailed RNGError = iota + 1
 )
 
-func (err CSPRNGError) Error() string {
+func (err RNGError) Error() string {
 	switch err {
 	case ErrReadEntropyFailed:
 		return "ErrReadEntropyFailed: " +
@@ -16,11 +16,7 @@ func (err CSPRNGError) Error() string {
 	}
 }
 
-type FnCSPRNG struct {
-	Read func(b []byte) (n int, err error)
-}
-
-type CSPRNG interface {
+type RNG interface {
 	Block(blockLen int) (block []byte, err error)
 	Read(block []byte) (err error)
 }

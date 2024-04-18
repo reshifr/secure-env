@@ -4,15 +4,19 @@ import (
 	"github.com/reshifr/secure-env/core/crypto"
 )
 
-type AutoRNG struct {
-	fn crypto.FnCSPRNG
+type StdRNG struct {
+	fn FnStdRNG
 }
 
-func NewAutoRNG(fnCSPRNG crypto.FnCSPRNG) AutoRNG {
-	return AutoRNG{fn: fnCSPRNG}
+type FnStdRNG struct {
+	Read func(b []byte) (n int, err error)
 }
 
-func (rng AutoRNG) Block(blockLen int) ([]byte, error) {
+func NewStdRNG(fn FnStdRNG) StdRNG {
+	return StdRNG{fn: fn}
+}
+
+func (rng StdRNG) Block(blockLen int) ([]byte, error) {
 	block := make([]byte, blockLen)
 	if _, err := rng.fn.Read(block); err != nil {
 		return nil, crypto.ErrReadEntropyFailed
@@ -20,7 +24,7 @@ func (rng AutoRNG) Block(blockLen int) ([]byte, error) {
 	return block, nil
 }
 
-func (rng AutoRNG) Read(block []byte) error {
+func (rng StdRNG) Read(block []byte) error {
 	if _, err := rng.fn.Read(block); err != nil {
 		return crypto.ErrReadEntropyFailed
 	}

@@ -24,18 +24,18 @@ func Test_CipherError_Error(t *testing.T) {
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})
-	t.Run("ErrInvalidBufferLayout value", func(t *testing.T) {
+	t.Run("ErrInvalidBufLayout value", func(t *testing.T) {
 		t.Parallel()
-		const err = ErrInvalidBufferLayout
-		const expMsg = "ErrInvalidBufferLayout: the buffer structure cannot be read."
+		const err = ErrInvalidBufLayout
+		const expMsg = "ErrInvalidBufLayout: the buffer structure cannot be read."
 
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
 	})
-	t.Run("ErrCipherAuthFailed value", func(t *testing.T) {
+	t.Run("ErrAuthFailed value", func(t *testing.T) {
 		t.Parallel()
-		const err = ErrCipherAuthFailed
-		const expMsg = "ErrCipherAuthFailed: failed to decrypt the data."
+		const err = ErrAuthFailed
+		const expMsg = "ErrAuthFailed: failed to decrypt the data."
 
 		msg := err.Error()
 		assert.Equal(t, expMsg, msg)
@@ -43,6 +43,26 @@ func Test_CipherError_Error(t *testing.T) {
 	t.Run("Unknown value", func(t *testing.T) {
 		t.Parallel()
 		const err = CipherError(957361)
+		const expMsg = "Error: unknown."
+
+		msg := err.Error()
+		assert.Equal(t, expMsg, msg)
+	})
+}
+
+func Test_AEError_Error(t *testing.T) {
+	t.Parallel()
+	t.Run("ErrAuthFailed value", func(t *testing.T) {
+		t.Parallel()
+		const err = ErrAuthFailed
+		const expMsg = "ErrAuthFailed: failed to decrypt the data."
+
+		msg := err.Error()
+		assert.Equal(t, expMsg, msg)
+	})
+	t.Run("Unknown value", func(t *testing.T) {
+		t.Parallel()
+		const err = AEError(527162)
 		const expMsg = "Error: unknown."
 
 		msg := err.Error()
