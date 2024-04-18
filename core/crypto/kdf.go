@@ -1,5 +1,5 @@
 package crypto
 
 type KDF interface {
-	Key(passphrase string, salt []byte, keyLen uint32) (key []byte)
+	Key(passphrase []byte, salt []byte, keyLen uint32) (key []byte)
 }
