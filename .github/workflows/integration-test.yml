@@ -1,4 +1,4 @@
-name: test
+name: Integration Test
 
 on:
   push:
@@ -9,13 +9,13 @@ on:
     - master
 
 jobs:
-  unit-test:
+  integration-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name: Run unit test
+      - name: Run integration test
         run: |
-          make unit-test
+          make integration-test
