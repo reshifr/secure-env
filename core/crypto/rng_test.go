@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_CSPRNGError_Error(t *testing.T) {
+func Test_RNGError_Error(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrReadEntropyFailed value", func(t *testing.T) {
 		t.Parallel()
@@ -19,7 +19,7 @@ func Test_CSPRNGError_Error(t *testing.T) {
 	})
 	t.Run("Unknown value", func(t *testing.T) {
 		t.Parallel()
-		const err = CSPRNGError(957361)
+		const err = RNGError(957361)
 		const expMsg = "Error: unknown."
 
 		msg := err.Error()
