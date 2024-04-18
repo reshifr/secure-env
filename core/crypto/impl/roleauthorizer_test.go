@@ -31,7 +31,7 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 	cipher := cmock.NewAE(t)
 
 	const accessKeyLen = 12
-	var expKey []byte = nil
+	var expAccessKey []byte = nil
 	var expBlock []byte = nil
 	const expErr = crypto.ErrReadEntropyFailed
 
@@ -41,9 +41,11 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 		rng := cmock.NewRNG(t)
 		rng.EXPECT().Block(int(accessKeyLen)).Return(accessKey, expErr).Once()
 
+		expAccessKey := bytes.Clone(accessKey)
+
 		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
-		key, block, err := authorizer.Make(iv, nil, accessKeyLen)
-		assert.Equal(t, expKey, key)
+		accessKey, block, err := authorizer.Make(iv, nil, accessKeyLen)
+		assert.Equal(t, expAccessKey, accessKey)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -58,17 +60,14 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 		rng.EXPECT().Read(salt[:]).Return(expErr).Once()
 
 		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
-		key, block, err := authorizer.Make(iv, nil, accessKeyLen)
-		assert.Equal(t, expKey, key)
+		accessKey, block, err := authorizer.Make(iv, nil, accessKeyLen)
+		assert.Equal(t, expAccessKey, accessKey)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
 
 	const keyLen = 8
 	passphrase := []byte("tHGuv,hQjjs?ZA8j")
-	key := bytes.Repeat([]byte{0x11}, keyLen)
-	kdf = cmock.NewKDF(t)
-	kdf.EXPECT().Key(passphrase, salt[:], uint32(keyLen)).Return(key).Twice()
 
 	t.Run("ErrAuthFailed error", func(t *testing.T) {
 		t.Parallel()
@@ -79,13 +78,17 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 		cipher := cmock.NewAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
+		var key []byte = nil
+		kdf = cmock.NewKDF(t)
+		kdf.EXPECT().Key(passphrase, salt[:], uint32(keyLen)).Return(key).Once()
+
 		var buf []byte = nil
 		const expErr = crypto.ErrAuthFailed
 		cipher.EXPECT().Seal(iv, key, accessKey).Return(buf, expErr).Once()
 
 		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
-		key, block, err := authorizer.Make(iv, passphrase, accessKeyLen)
-		assert.Equal(t, expKey, key)
+		accessKey, block, err := authorizer.Make(iv, passphrase, accessKeyLen)
+		assert.Equal(t, expAccessKey, accessKey)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
 	})
@@ -98,16 +101,75 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 		cipher := cmock.NewAE(t)
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
-		buf := bytes.Repeat([]byte{0x33}, 10)
+		key := bytes.Repeat([]byte{0x11}, keyLen)
+		kdf = cmock.NewKDF(t)
+		kdf.EXPECT().Key(passphrase, salt[:], uint32(keyLen)).Return(key).Once()
+
+		buf := bytes.Repeat([]byte{0x44}, 10)
 		cipher.EXPECT().Seal(iv, key, accessKey).Return(buf, nil).Once()
 
-		expKey := bytes.Clone(accessKey)
+		expAccessKey := bytes.Clone(accessKey)
 		expBlock := append(salt[:], buf...)
 
 		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
-		key, block, err := authorizer.Make(iv, passphrase, accessKeyLen)
-		assert.Equal(t, expKey, key)
+		accessKey, block, err := authorizer.Make(iv, passphrase, accessKeyLen)
+		assert.Equal(t, expAccessKey, accessKey)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})
+}
+
+func Test_RoleAuthorizer_Open(t *testing.T) {
+	t.Parallel()
+
+	rng := cmock.NewRNG(t)
+	var expAccessKey []byte = nil
+
+	t.Run("ErrInvalidBlockLen error", func(t *testing.T) {
+		t.Parallel()
+		kdf := cmock.NewKDF(t)
+		cipher := cmock.NewAE(t)
+
+		block := bytes.Repeat([]byte{0x55}, 8)
+		const expErr = crypto.ErrInvalidBlockLen
+
+		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
+		accessKey, err := authorizer.Open(nil, block)
+		assert.Equal(t, expAccessKey, accessKey)
+		assert.ErrorIs(t, err, expErr)
+	})
+
+	const keyLen = 8
+	key := bytes.Repeat([]byte{0x11}, keyLen)
+	passphrase := []byte("p,GOffHa6TZ4v/s-")
+
+	salt := bytes.Repeat([]byte{0x33}, RoleAuthorizerSaltLen)
+	buf := bytes.Repeat([]byte{0x44}, 10)
+	kdf := cmock.NewKDF(t)
+	kdf.EXPECT().Key(passphrase, salt, uint32(keyLen)).Return(key).Once()
+
+	t.Run("ErrAuthFailed error", func(t *testing.T) {
+		t.Parallel()
+		cipher := cmock.NewAE(t)
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
+
+		const expErr = crypto.ErrAuthFailed
+		cipher.EXPECT().Open(key, buf).Return(expAccessKey, expErr).Once()
+
+		block := append(salt, buf...)
+
+		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
+		accessKey, err := authorizer.Open(passphrase, block)
+		assert.Equal(t, expAccessKey, accessKey)
+		assert.ErrorIs(t, err, expErr)
+	})
+
+	// t.Run("Succeed", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	cipher := cmock.NewAE(t)
+	// 	cipher.EXPECT().KeyLen().Return(keyLen).Once()
+
+	// 	expAccessKey :=
+	// 		cipher.EXPECT().Open(key, buf).Return(expAccessKey, nil).Once()
+	// })
 }
