@@ -79,7 +79,7 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		var key []byte = nil
-		kdf = cmock.NewKDF(t)
+		kdf := cmock.NewKDF(t)
 		kdf.EXPECT().Key(passphrase, salt[:], uint32(keyLen)).Return(key).Once()
 
 		var buf []byte = nil
