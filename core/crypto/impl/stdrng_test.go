@@ -9,20 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_NewAutoRNG(t *testing.T) {
+func Test_NewStdRNG(t *testing.T) {
 	t.Parallel()
-	fn := crypto.FnCSPRNG{}
-	expRNG := AutoRNG{fn: fn}
+	fn := FnStdRNG{}
+	expRNG := StdRNG{fn: fn}
 
-	rng := NewAutoRNG(fn)
+	rng := NewStdRNG(fn)
 	assert.Equal(t, expRNG, rng)
 }
 
-func Test_AutoRNG_Block(t *testing.T) {
+func Test_StdRNG_Block(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		fn := crypto.FnCSPRNG{
+		fn := FnStdRNG{
 			Read: func([]byte) (int, error) {
 				return 0, errors.New("")
 			},
@@ -30,7 +30,7 @@ func Test_AutoRNG_Block(t *testing.T) {
 		var expBlock []byte = nil
 		const expErr = crypto.ErrReadEntropyFailed
 
-		rng := NewAutoRNG(fn)
+		rng := NewStdRNG(fn)
 		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
@@ -38,25 +38,25 @@ func Test_AutoRNG_Block(t *testing.T) {
 	t.Run("Succeed", func(t *testing.T) {
 		t.Parallel()
 		expBlock := bytes.Repeat([]byte{0xff}, 8)
-		fn := crypto.FnCSPRNG{
+		fn := FnStdRNG{
 			Read: func(block []byte) (n int, err error) {
 				copy(block, expBlock)
 				return len(block), nil
 			},
 		}
 
-		rng := NewAutoRNG(fn)
+		rng := NewStdRNG(fn)
 		block, err := rng.Block(8)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)
 	})
 }
 
-func Test_AutoRNG_Read(t *testing.T) {
+func Test_StdRNG_Read(t *testing.T) {
 	t.Parallel()
 	t.Run("ErrReadEntropyFailed error", func(t *testing.T) {
 		t.Parallel()
-		fn := crypto.FnCSPRNG{
+		fn := FnStdRNG{
 			Read: func([]byte) (int, error) {
 				return 0, errors.New("")
 			},
@@ -65,7 +65,7 @@ func Test_AutoRNG_Read(t *testing.T) {
 		expBlock := bytes.Clone(block)
 		const expErr = crypto.ErrReadEntropyFailed
 
-		rng := NewAutoRNG(fn)
+		rng := NewStdRNG(fn)
 		err := rng.Read(block)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, expErr)
@@ -74,14 +74,14 @@ func Test_AutoRNG_Read(t *testing.T) {
 		t.Parallel()
 		block := make([]byte, 8)
 		expBlock := bytes.Repeat([]byte{0xff}, 8)
-		fn := crypto.FnCSPRNG{
+		fn := FnStdRNG{
 			Read: func(block []byte) (int, error) {
 				copy(block, expBlock)
 				return len(block), nil
 			},
 		}
 
-		rng := NewAutoRNG(fn)
+		rng := NewStdRNG(fn)
 		err := rng.Read(block)
 		assert.Equal(t, expBlock, block)
 		assert.ErrorIs(t, err, nil)

@@ -18,7 +18,7 @@ func (_m *KDF) EXPECT() *KDF_Expecter {
 }
 
 // Key provides a mock function with given fields: passphrase, salt, keyLen
-func (_m *KDF) Key(passphrase string, salt []byte, keyLen uint32) []byte {
+func (_m *KDF) Key(passphrase []byte, salt []byte, keyLen uint32) []byte {
 	ret := _m.Called(passphrase, salt, keyLen)
 
 	if len(ret) == 0 {
@@ -26,7 +26,7 @@ func (_m *KDF) Key(passphrase string, salt []byte, keyLen uint32) []byte {
 	}
 
 	var r0 []byte
-	if rf, ok := ret.Get(0).(func(string, []byte, uint32) []byte); ok {
+	if rf, ok := ret.Get(0).(func([]byte, []byte, uint32) []byte); ok {
 		r0 = rf(passphrase, salt, keyLen)
 	} else {
 		if ret.Get(0) != nil {
@@ -43,16 +43,16 @@ type KDF_Key_Call struct {
 }
 
 // Key is a helper method to define mock.On call
-//   - passphrase string
+//   - passphrase []byte
 //   - salt []byte
 //   - keyLen uint32
 func (_e *KDF_Expecter) Key(passphrase interface{}, salt interface{}, keyLen interface{}) *KDF_Key_Call {
 	return &KDF_Key_Call{Call: _e.mock.On("Key", passphrase, salt, keyLen)}
 }
 
-func (_c *KDF_Key_Call) Run(run func(passphrase string, salt []byte, keyLen uint32)) *KDF_Key_Call {
+func (_c *KDF_Key_Call) Run(run func(passphrase []byte, salt []byte, keyLen uint32)) *KDF_Key_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].([]byte), args[2].(uint32))
+		run(args[0].([]byte), args[1].([]byte), args[2].(uint32))
 	})
 	return _c
 }
@@ -62,7 +62,7 @@ func (_c *KDF_Key_Call) Return(key []byte) *KDF_Key_Call {
 	return _c
 }
 
-func (_c *KDF_Key_Call) RunAndReturn(run func(string, []byte, uint32) []byte) *KDF_Key_Call {
+func (_c *KDF_Key_Call) RunAndReturn(run func([]byte, []byte, uint32) []byte) *KDF_Key_Call {
 	_c.Call.Return(run)
 	return _c
 }

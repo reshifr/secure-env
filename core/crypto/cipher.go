@@ -5,8 +5,7 @@ type CipherError int
 const (
 	ErrInvalidIVLen CipherError = iota + 1
 	ErrInvalidKeyLen
-	ErrInvalidBufferLayout
-	ErrCipherAuthFailed
+	ErrInvalidBufLayout
 )
 
 func (err CipherError) Error() string {
@@ -15,31 +14,35 @@ func (err CipherError) Error() string {
 		return "ErrInvalidIVLen: invalid IV length."
 	case ErrInvalidKeyLen:
 		return "ErrInvalidKeyLen: invalid key length."
-	case ErrInvalidBufferLayout:
-		return "ErrInvalidBufferLayout: the buffer structure cannot be read."
-	case ErrCipherAuthFailed:
-		return "ErrCipherAuthFailed: failed to decrypt the data."
+	case ErrInvalidBufLayout:
+		return "ErrInvalidBufLayout: the buffer structure cannot be read."
 	default:
 		return "Error: unknown."
 	}
 }
 
-type CipherIV interface {
+type AEError int
+
+const (
+	ErrAuthFailed AEError = iota + 1
+)
+
+func (err AEError) Error() string {
+	switch err {
+	case ErrAuthFailed:
+		return "ErrAuthFailed: failed to decrypt the data."
+	default:
+		return "Error: unknown."
+	}
+}
+
+type IV interface {
 	Len() (ivLen uint32)
 	Invoke() (invokedRawIV []byte)
 }
 
-type CipherBuf interface {
-	Len() (bufLen int)
-	RawIV() (rawIV []byte)
-	Ciphertext() (ciphertext []byte)
-	Raw() (rawBuf []byte)
-}
-
-type CipherAE interface {
+type AE interface {
 	KeyLen() (keyLen uint32)
-	MakeBuf(rawIV []byte, ciphertext []byte) (buf CipherBuf, err error)
-	LoadBuf(rawBuf []byte) (buf CipherBuf, err error)
-	Seal(iv CipherIV, key []byte, plaintext []byte) (buf CipherBuf, err error)
-	Open(key []byte, buf CipherBuf) (ciphertext []byte, err error)
+	Seal(iv IV, key []byte, plaintext []byte) (buf []byte, err error)
+	Open(key []byte, buf []byte) (ciphertext []byte, err error)
 }
