@@ -1,5 +1,4 @@
 name: test
-
 on:
   push:
     branches:
@@ -7,15 +6,23 @@ on:
   pull_request:
     branches:
     - master
-
 jobs:
   unit-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
       - name: Run unit test
         run: |
           make unit-test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: reshifr/secure-env
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run integration test
+        run: |
+          make integration-test
