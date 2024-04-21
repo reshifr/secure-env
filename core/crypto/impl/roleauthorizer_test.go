@@ -121,7 +121,6 @@ func Test_RoleAuthorizer_Make(t *testing.T) {
 
 func Test_RoleAuthorizer_Open(t *testing.T) {
 	t.Parallel()
-
 	rng := cmock.NewRNG(t)
 	var expAccessKey []byte = nil
 
@@ -140,13 +139,13 @@ func Test_RoleAuthorizer_Open(t *testing.T) {
 	})
 
 	const keyLen = 8
-	key := bytes.Repeat([]byte{0x11}, keyLen)
 	passphrase := []byte("p,GOffHa6TZ4v/s-")
+	key := bytes.Repeat([]byte{0x11}, keyLen)
 
 	salt := bytes.Repeat([]byte{0x33}, RoleAuthorizerSaltLen)
 	buf := bytes.Repeat([]byte{0x44}, 10)
 	kdf := cmock.NewKDF(t)
-	kdf.EXPECT().Key(passphrase, salt, uint32(keyLen)).Return(key).Once()
+	kdf.EXPECT().Key(passphrase, salt, uint32(keyLen)).Return(key).Twice()
 
 	t.Run("ErrAuthFailed error", func(t *testing.T) {
 		t.Parallel()
@@ -154,7 +153,8 @@ func Test_RoleAuthorizer_Open(t *testing.T) {
 		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
 		const expErr = crypto.ErrAuthFailed
-		cipher.EXPECT().Open(key, buf).Return(expAccessKey, expErr).Once()
+		var accessKey []byte = nil
+		cipher.EXPECT().Open(key, buf).Return(accessKey, expErr).Once()
 
 		block := append(salt, buf...)
 
@@ -163,13 +163,21 @@ func Test_RoleAuthorizer_Open(t *testing.T) {
 		assert.Equal(t, expAccessKey, accessKey)
 		assert.ErrorIs(t, err, expErr)
 	})
+	t.Run("Succeed", func(t *testing.T) {
+		t.Parallel()
+		cipher := cmock.NewAE(t)
+		cipher.EXPECT().KeyLen().Return(keyLen).Once()
 
-	// t.Run("Succeed", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	cipher := cmock.NewAE(t)
-	// 	cipher.EXPECT().KeyLen().Return(keyLen).Once()
+		const accessKeyLen = 12
+		accessKey := bytes.Repeat([]byte{0x22}, accessKeyLen)
+		cipher.EXPECT().Open(key, buf).Return(accessKey, nil).Once()
 
-	// 	expAccessKey :=
-	// 		cipher.EXPECT().Open(key, buf).Return(expAccessKey, nil).Once()
-	// })
+		block := append(salt, buf...)
+		expAccessKey := bytes.Clone(accessKey)
+
+		authorizer := NewRoleAuthorizer(kdf, rng, cipher)
+		accessKey, err := authorizer.Open(passphrase, block)
+		assert.Equal(t, expAccessKey, accessKey)
+		assert.ErrorIs(t, err, nil)
+	})
 }
