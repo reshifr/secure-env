@@ -4,3 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/reshifr/secure-env)](https://goreportcard.com/report/github.com/reshifr/secure-env)
 
 A tool for managing access control of environment variable configurations in Unix-like systems.
+
+## Cryptographic protocol
+### Role-based access
+![cryptographic-protocol](doc/cryptographic-protocol.png)
