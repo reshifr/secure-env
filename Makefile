@@ -5,7 +5,9 @@ TEST =
 UNIT_TEST_BUILD_DIR = $(BUILD_DIR)/unit-test
 UNIT_TEST_PKG = \
 	./core/crypto \
-	./core/crypto/impl
+	./core/crypto/impl \
+	./core/env \
+	./core/env/impl
 
 INTEGRATION_TEST_PKG = \
 	./core/crypto/test \
