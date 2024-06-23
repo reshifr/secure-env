@@ -29,22 +29,6 @@ func NewRoleAuthorizer[
 	}
 }
 
-func (authorizer RoleAuthorizer[KDF, RNG, Cipher]) sealAccessKey(
-	iv crypto.IV,
-	passphrase []byte,
-	salt [RoleAuthorizerSaltLen]byte,
-	accessKey []byte) (block []byte, err error) {
-	key := authorizer.kdf.Key(passphrase, salt[:], authorizer.cipher.KeyLen())
-	buf, err := authorizer.cipher.Seal(iv, key, accessKey)
-	if err != nil {
-		return nil, err
-	}
-	block = make([]byte, RoleAuthorizerSaltLen+len(buf))
-	copy(block, salt[:])
-	copy(block[RoleAuthorizerSaltLen:], buf)
-	return block, nil
-}
-
 func (authorizer RoleAuthorizer[KDF, RNG, Cipher]) Make(
 	iv crypto.IV, passphrase []byte, keyLen uint32) ([]byte, []byte, error) {
 	accessKey, err := authorizer.rng.Block(int(keyLen))
@@ -56,6 +40,9 @@ func (authorizer RoleAuthorizer[KDF, RNG, Cipher]) Make(
 		return nil, nil, err
 	}
 	block, err := authorizer.sealAccessKey(iv, passphrase, salt, accessKey)
+	if err != nil {
+		return nil, block, err
+	}
 	return accessKey, block, err
 }
 
@@ -90,4 +77,20 @@ func (authorizer RoleAuthorizer[KDF, RNG, Cipher]) Inherit(
 	childBlock, err := authorizer.sealAccessKey(
 		iv, childPassphrase, salt, accessKey)
 	return accessKey, childBlock, err
+}
+
+func (authorizer RoleAuthorizer[KDF, RNG, Cipher]) sealAccessKey(
+	iv crypto.IV,
+	passphrase []byte,
+	salt [RoleAuthorizerSaltLen]byte,
+	accessKey []byte) (block []byte, err error) {
+	key := authorizer.kdf.Key(passphrase, salt[:], authorizer.cipher.KeyLen())
+	buf, err := authorizer.cipher.Seal(iv, key, accessKey)
+	if err != nil {
+		return nil, err
+	}
+	block = make([]byte, RoleAuthorizerSaltLen+len(buf))
+	copy(block, salt[:])
+	copy(block[RoleAuthorizerSaltLen:], buf)
+	return block, nil
 }
